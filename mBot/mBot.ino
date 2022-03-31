@@ -73,7 +73,7 @@ void setup() {
           _delay(1);
           move(2, 0);
 
-          move(4, 20 / 100.0 * 255);
+          move(4, 10 / 100.0 * 255);
           _delay(1);
           move(4, 0);
 
@@ -84,7 +84,7 @@ void setup() {
           _delay(1);
           move(2, 0);
 
-          move(3, 20 / 100.0 * 255);
+          move(3, 10 / 100.0 * 255);
           _delay(1);
           move(3, 0);
 
@@ -95,7 +95,7 @@ void setup() {
           _delay(1);
           move(2, 0);
 
-          move(3, 20 / 100.0 * 255);
+          move(3, 10 / 100.0 * 255);
           _delay(1);
           move(3, 0);
 
