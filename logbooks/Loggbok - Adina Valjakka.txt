@@ -1,0 +1,7 @@
+Vecka 1
+- Setup Github, Trello
+- Create groupchat for messages
+- First meeting with group
+- Build mBot
+
+Vecka 2
