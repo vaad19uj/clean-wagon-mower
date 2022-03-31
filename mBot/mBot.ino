@@ -6,9 +6,10 @@
 #include <SoftwareSerial.h>
 #include <MeAuriga.h>
 
-MeLightSensor lightsensor_12(12);
 MeEncoderOnBoard Encoder_1(SLOT1);
 MeEncoderOnBoard Encoder_2(SLOT2);
+MeLineFollower linefollower_6(6);
+MeLightSensor lightsensor_12(12);
 
 void isr_process_encoder1(void)
 {
@@ -56,25 +57,52 @@ void _delay(float seconds) {
 }
 
 void setup() {
-  randomSeed((unsigned long)(lightsensor_12.read() * 123456));
   TCCR1A = _BV(WGM10);
   TCCR1B = _BV(CS11) | _BV(WGM12);
   TCCR2A = _BV(WGM21) | _BV(WGM20);
   TCCR2B = _BV(CS21);
   attachInterrupt(Encoder_1.getIntNum(), isr_process_encoder1, RISING);
   attachInterrupt(Encoder_2.getIntNum(), isr_process_encoder2, RISING);
+  randomSeed((unsigned long)(lightsensor_12.read() * 123456));
+  while(1) {
 
-  move(1, 50 / 100.0 * 255);
-  _delay(5);
-  move(1, 0);
+      move(1, 10 / 100.0 * 255);
+      if((0?(2==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 2)==2):(2==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 2)==0))){
 
-  move(4, 50 / 100.0 * 255);
-  _delay(2);
-  move(4, 0);
+          move(2, 10 / 100.0 * 255);
+          _delay(1);
+          move(2, 0);
 
-  move(3, 50 / 100.0 * 255);
-  _delay(2);
-  move(3, 0);
+          move(4, 10 / 100.0 * 255);
+          _delay(1);
+          move(4, 0);
+
+      }
+      if((0?(1==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 1)==1):(1==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 1)==0))){
+
+          move(2, 10 / 100.0 * 255);
+          _delay(1);
+          move(2, 0);
+
+          move(3, 10 / 100.0 * 255);
+          _delay(1);
+          move(3, 0);
+
+      }
+      if((0?(3==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 3)==3):(3==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 3)==0))){
+
+          move(2, 10 / 100.0 * 255);
+          _delay(1);
+          move(2, 0);
+
+          move(3, 10 / 100.0 * 255);
+          _delay(1);
+          move(3, 0);
+
+      }
+
+      _loop();
+  }
 
 }
 
