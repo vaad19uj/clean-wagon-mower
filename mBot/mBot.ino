@@ -28,10 +28,14 @@ void isr_process_encoder2(void)
     Encoder_2.pulsePosPlus();
   }
 }
+
+//Function to move robot
 void move(int direction, int speed)
 {
   int leftSpeed = 0;
   int rightSpeed = 0;
+
+  //Set the direction of 2 motors' movement
   if(direction == 1){
     leftSpeed = -speed;
     rightSpeed = speed;
@@ -67,50 +71,64 @@ void setup() {
   randomSeed((unsigned long)(lightsensor_12.read() * 123456));
   while(1) {
 
+      //Move forward at 25% speed
       move(1, 25 / 100.0 * 255);
       if(ultrasonic_7.distanceCm() < 25){
+
+          //Stop moving
           Encoder_1.setTarPWM(0);
           Encoder_2.setTarPWM(0);
           _delay(0.5);
           _delay(2);
 
+          //Move backward at 25% speed for 1 second
           move(2, 25 / 100.0 * 255);
           _delay(1);
           move(2, 0);
 
+          //Turn right at 20% speed for 1 second
           move(4, 20 / 100.0 * 255);
           _delay(1);
           move(4, 0);
 
       }else{
+          //If line follower sensor detects left black
           if((0?(2==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 2)==2):(2==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 2)==0))){
 
+              //Move backward at 25% speed for 1 second
               move(2, 25 / 100.0 * 255);
               _delay(1);
               move(2, 0);
 
+              //Turn right at 10% speed for 1 second
               move(4, 10 / 100.0 * 255);
               _delay(1);
               move(4, 0);
 
           }
+          //If line follower sensor detects right black
           if((0?(1==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 1)==1):(1==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 1)==0))){
 
+              //Move backward at 25% speed for 1 second
               move(2, 25 / 100.0 * 255);
               _delay(1);
               move(2, 0);
 
+              //Turn left at 10% speed for 1 second
               move(3, 10 / 100.0 * 255);
               _delay(1);
               move(3, 0);
 
           }
+          //If line follower sensor detects BOTH black (necessary?)
           if((0?(3==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 3)==3):(3==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 3)==0))){
 
+              //Move backward at 25% speed for 1 second
               move(2, 25 / 100.0 * 255);
               _delay(1);
               move(2, 0);
 
+              //Turn let at 10% speed for 1 second
               move(3, 10 / 100.0 * 255);
               _delay(1);
               move(3, 0);
