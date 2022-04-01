@@ -26,9 +26,9 @@ enum operationMode {
 struct coordinate{
   int x = 0;
   int y = 0;
-}
+};
 
-coordinate mowerPosition = {0, 0};
+coordinate mowerPosition;
 
 void isr_process_encoder1(void)
 {
