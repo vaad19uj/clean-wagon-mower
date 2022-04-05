@@ -6,3 +6,8 @@ Vecka 1
 - Gick och köpte en micro-usb kabel för att kunna koppla raspberry pin till Arduinon för seriell kommunikation. 
 
 Vecka 2
+- Deltog i sprintplaneringsmötet med gruppen, där vi diskuterade veckans tasks och estimerade poäng för varje task. 
+- Förberedde ett dokument med frågor och funderingar till torsdagens möte med handledarna på Husqvarna.
+- Gjorde ett försök att snygga till den automatgenererade koden från mBlock, genom att dela upp koden mer i olika funktioner, och lägga till enums och structs för att öka läsbarheten. La till lite TODO kommentarer över vad jag tror kommer behöva fixas. 
+- Började jobba med seriella kommunikationen mellan rpi och arduino. Testade koden för ett "Hello world" exempel vi hittade online. 
+
