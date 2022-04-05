@@ -10,11 +10,11 @@ MeLineFollower linefollower_6(6);
 MeLightSensor lightsensor_12(12);
 
 enum directions {
-  forward,
-  backward,
-  left,
-  right,
-  stopMoving 
+  directionForward,
+  directionBackward,
+  directionLeft,
+  directionRight,
+  directionStopMoving 
 };
 
 enum operationMode {
@@ -29,6 +29,11 @@ struct coordinate{
 };
 
 coordinate mowerPosition;
+directions backward = directionBackward;
+directions left = directionLeft;
+directions right = directionRight;
+directions forward = directionForward;
+directions stopMoving = directionStopMoving;
 
 void isr_process_encoder1(void)
 {
@@ -51,68 +56,27 @@ void positionData(directions direction, int speed){
   //TODO: Calculate position based on direction and speed? Using dead reckoning 
 
   switch(direction){
-    case forward:
+    case directionForward:
     //  mowerPosition.y += ??
     break;
-    case backward:
+    case directionBackward:
     //  mowerPosition.y -= ??
     break;
-    case left:
+    case directionLeft:
     //  mowerPosition.x -= ??
     break;
-    case right:
+    case directionRight:
     //  mowerPosition.x += ??
     break;
-    case stopMoving:
+    case directionStopMoving:
       // do nothing, position is not changing 
     break;
     default:
     // do nothing
     break; 
-
-    //TODO: Send new position to backend 
   }
-}
 
-void obstacleDetected(){
-      directions backward = backward;
-      directions right = right;
-      directions stopMoving = stopMoving;
-      
-      //Stop moving
-      move(stopMoving, 0);
-      _delay(0.5);
-      _delay(2);
-
-      //TODO: Flag to RPi to take picture here and send to backend?
-
-      //Move backward at 25% speed for 1 second
-      move(backward, 25 / 100.0 * 255);
-      _delay(1);
-      move(backward, 0);
-
-      //Turn right at 20% speed for 1 second
-      move(right, 20 / 100.0 * 255);
-      _delay(1);
-      move(right, 0);
-}
-
-void lineDetected(){
-      directions backward = backward;
-      directions left = left;
-      directions right = right;
-      
-      //Move backward at 25% speed for 1 second
-      move(backward, 25 / 100.0 * 255);
-      _delay(1);
-      move(backward, 0);
-
-      //TODO: randomize if mower should turn left or right
-      
-      //Turn right at 10% speed for 1 second
-      move(right, 10 / 100.0 * 255);
-      _delay(1);
-      move(right, 0);
+  //TODO: Send new position to backend 
 }
 
 //Function to move robot
@@ -121,26 +85,37 @@ void move(directions direction, int speed)
   int leftSpeed = 0;
   int rightSpeed = 0;
 
-  positionData(direction, speed);
+  //positionData(direction, speed);
+  // do we need to add duration here? So we know how long we are travelling in one direction?
 
   //Set the direction of 2 motors' movement
-  if(direction == forward){
-    leftSpeed = -speed;
-    rightSpeed = speed;
-  }else if(direction == backward){
-    leftSpeed = speed;
-    rightSpeed = -speed;
-  }else if(direction == left){
-    leftSpeed = -speed;
-    rightSpeed = -speed;
-  }else if(direction == right){
-    leftSpeed = speed;
-    rightSpeed = speed;
+  switch(direction){
+    case directionForward:
+      leftSpeed = -speed;
+      rightSpeed = speed;
+    break;
+    case directionBackward:
+     leftSpeed = speed;
+     rightSpeed = -speed;
+    break;
+    case directionLeft:
+      leftSpeed = -speed;
+      rightSpeed = -speed;
+    break;
+    case directionRight:
+      leftSpeed = speed;
+      rightSpeed = speed;
+    break;
+    case directionStopMoving:
+      // 0
+      leftSpeed = speed;
+      rightSpeed = speed;
+    break;
+    default:
+    // do nothing
+    break; 
   }
-  else if(direction == stopMoving){
-    leftSpeed = speed;
-    rightSpeed = speed;
-  }
+  
   Encoder_1.setTarPWM(leftSpeed);
   Encoder_2.setTarPWM(rightSpeed);
 }
@@ -153,30 +128,62 @@ void _delay(float seconds) {
   while(millis() < endTime) _loop();
 }
 
-void runAutonomous (){
-    directions forward = forward;
-    int distanceToObstacle = 25;
-    
-    //Move forward at 25% speed
-    move(forward, 25 / 100.0 * 255);
-    if(ultrasonic_7.distanceCm() < distanceToObstacle){
-        obstacleDetected();
-    }else{
-        //If line follower sensor detects left black
-        if((0?(2==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 2)==2):(2==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 2)==0))){
-            lineDetected();
+void lineDetected(){
+  //Move backward at 25% speed for 1 second
+  move(backward, 25 / 100.0 * 255);
+  _delay(1);
+  move(backward, 0);
+
+  //TODO: randomize if mower should turn left or right
+
+  //Turn right at 10% speed for 1 second
+  move(right, 10 / 100.0 * 255);
+  _delay(1);
+  move(right, 0);
+}
+
+void obstacleDetected(){
+  //Stop moving
+  move(stopMoving, 0);
+  _delay(0.5);
+  _delay(2);
+
+  //TODO: Flag to RPi to take picture here and send to backend?
+
+  //Move backward at 25% speed for 1 second
+  move(backward, 25 / 100.0 * 255);
+  _delay(1);
+  move(backward, 0);
+
+  //TODO: randomize if mower should turn left or right
+
+  //Turn right at 20% speed for 1 second
+  move(right, 20 / 100.0 * 255);
+  _delay(1);
+  move(right, 0);
+}
+
+void runAutonomous(){
+  int distanceToObstacle = 25;
   
-        }
-        //If line follower sensor detects right black
-        if((0?(1==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 1)==1):(1==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 1)==0))){
-            lineDetected();
-  
-        }
-        //If line follower sensor detects BOTH black (necessary?)
-        if((0?(3==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 3)==3):(3==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 3)==0))){
-            lineDetected();
-        }
-    }
+  //Move forward at 25% speed
+  move(forward, 25 / 100.0 * 255);
+  if(ultrasonic_7.distanceCm() < distanceToObstacle){
+      obstacleDetected();
+  }else{
+      //If line follower sensor detects left black
+      if((0?(2==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 2)==2):(2==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 2)==0))){
+        lineDetected();
+      }
+      //If line follower sensor detects right black
+      if((0?(1==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 1)==1):(1==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 1)==0))){
+        lineDetected();
+      }
+      //If line follower sensor detects BOTH black (necessary?)
+      if((0?(3==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 3)==3):(3==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 3)==0))){
+        lineDetected();
+      }
+  }
 }
 
 void runBluetooth(){
@@ -198,26 +205,24 @@ void setup() {
 
   //TODO: Decide mode by input from app?
   operationMode mode = autonomous;
-  
   while(1) {
-      switch(mode){
-        case autonomous:
-          runAutonomous();
-        break;
-        case bluetooth:
-          runBluetooth();
-        break;
-        case remote:
-          runRemote();
-        break;
-        default:
-        // do nothing
-        break;
-      }
-    _loop();
-   }  
-}
 
+    switch(mode){
+      case autonomous:
+        runAutonomous();
+      break;
+      case bluetooth:
+        runBluetooth();
+      break;
+      case remote:
+        runRemote();
+      break;
+      default:
+      break;
+    }
+      _loop();
+  }
+}
 
 void _loop() {
   Encoder_1.loop();
