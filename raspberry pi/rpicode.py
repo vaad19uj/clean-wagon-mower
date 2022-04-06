@@ -11,11 +11,14 @@ def takePicture(camera):
     camera.capture('/home/pi/Desktop/image.png')
     camera.stop_preview()
     
-    # Take image from desktop and send to backend, using HTTP
+    # Take image from desktop and send to backend, using API
     url = 'http://ec2-16-170-167-138.eu-north-1.compute.amazonaws.com/api/v1/images'
-    obstacleImg = {'key': 'image', 'value': '/home/pi/Desktop/image.png'}
 
-    response = requests.post(url, data = obstacleImg)
+    fileName = 'image.png'
+    filePath = '/home/pi/Desktop/image.png'
+    obstacleImg =[('image',(fileName,open(filePath,'rb'),'image/png'))]   
+
+    response = requests.request("POST", url, headers=headers, data=payload, files=obstacleImg)
     print(response.status_code)
 
 if __name__ == '__main__':
