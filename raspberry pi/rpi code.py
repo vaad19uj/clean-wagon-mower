@@ -16,7 +16,7 @@ def takePicture(camera):
     obstacleImg = {'key': 'image', 'value': '/home/pi/Desktop/image.png'}
 
     response = requests.post(url, data = obstacleImg)
-    print(response.text)
+    print(response.status_code)
 
 if __name__ == '__main__':
     ser = serial.Serial('/dev/ttyUSB0', 9600)
