@@ -18,7 +18,7 @@ def takePicture(camera):
     filePath = '/home/pi/Desktop/image.png'
     obstacleImg =[('image',(fileName,open(filePath,'rb'),'image/png'))]   
 
-    response = requests.request("POST", url, headers=headers, data=payload, files=obstacleImg)
+    response = requests.request("POST", url, files=obstacleImg)
     print(response.status_code)
 
 if __name__ == '__main__':
