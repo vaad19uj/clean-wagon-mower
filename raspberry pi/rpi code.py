@@ -5,21 +5,11 @@ import requests
 from picamera import PiCamera
 from time import sleep
 
-if __name__ == '__main__':
-    ser = serial.Serial('/dev/ttyxxx', 9600, timeout=1)
-    ser.reset_input_buffer()
-    while True:
-        cmd = ser.read()
-        if cmd == 0:
-            takePicture()
-
-def takePicture():
-    camera = PiCamera()
+def takePicture(camera):
     camera.start_preview()
     sleep(1)
-    camera.capture('/home/pi/Desktop/image.jpg')
+    camera.capture('/home/pi/Desktop/image.png')
     camera.stop_preview()
-    #camera.close()
     
     # Take image from desktop and send to backend, using HTTP
 
@@ -28,5 +18,18 @@ def takePicture():
 
     #response = requests.post(url, data = obstacleImg)
     #print(response.text)
+
+if __name__ == '__main__':
+    ser = serial.Serial('/dev/ttyUSB0', 9600)
+    ser.flush()
+    ser.reset_input_buffer()
+    camera = PiCamera()
+    while True:
+        cmd = ser.readline()
+        cmdAsInt = int(cmd)
+        if cmdAsInt == 0:
+            takePicture(camera)
+
+
         
     
