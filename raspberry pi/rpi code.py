@@ -12,12 +12,11 @@ def takePicture(camera):
     camera.stop_preview()
     
     # Take image from desktop and send to backend, using HTTP
+    url = 'http://ec2-16-170-167-138.eu-north-1.compute.amazonaws.com/api/v1/images'
+    obstacleImg = {'key': 'image', 'value': '/home/pi/Desktop/image.png'}
 
-    #url = 'https://www.w3schools.com/python/demopage.php'
-    #obstacleImg = {'somekey': 'somevalue'}
-
-    #response = requests.post(url, data = obstacleImg)
-    #print(response.text)
+    response = requests.post(url, data = obstacleImg)
+    print(response.text)
 
 if __name__ == '__main__':
     ser = serial.Serial('/dev/ttyUSB0', 9600)
