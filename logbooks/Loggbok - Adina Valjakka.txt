@@ -1,13 +1,20 @@
 Vecka 1
 - Hade första mötet med gruppen, där vi delade ut roller i projektet och diskuterade vidare kring projektet. Vi delade upp gruppen i 3 subgrupper, backend, app och mower/robot. 
-- Satte upp Repositories till alla "subgrupper" på Github och fixade Trello-boards till Sprint planeringen.
+- Satte upp Repositories till alla subgrupper på Github och fixade Trello-boards till Sprintplaneringen.
 - Valde en modell för mBoten och monterade ihop den.
-- Testade koden (tillsammans med Markus och Viktor) för att få igång "obstacle detection" med ultrasonic sensorn och fick roboten att köra och hålla sig inom ett "confined area". 
+- Vi testade koden för att få igång obstacle detection med ultrasonic sensorn och fick roboten att köra och hålla sig inom ett confined area. 
 - Gick och köpte en micro-usb kabel för att kunna koppla raspberry pin till Arduinon för seriell kommunikation. 
 
 Vecka 2
 - Deltog i sprintplaneringsmötet med gruppen, där vi diskuterade veckans tasks och estimerade poäng för varje task. 
 - Förberedde ett dokument med frågor och funderingar till torsdagens möte med handledarna på Husqvarna.
 - Gjorde ett försök att snygga till den automatgenererade koden från mBlock, genom att dela upp koden mer i olika funktioner, och lägga till enums och structs för att öka läsbarheten. La till lite TODO kommentarer över vad jag tror kommer behöva fixas. 
-- Började jobba med seriella kommunikationen mellan rpi och arduino. Testade koden för ett "Hello world" exempel vi hittade online. 
+- Började jobba med seriella kommunikationen mellan rpi och Arduino. Testade koden för ett "Hello world" exempel vi hittade online och lyckades få komponenterna att "prata" med varandra. 
+- Kopplade upp kameran. Började jobba med koden för att kunna ta kort med rpi'n när Arduino skickat en "flagga" för ett obstacle detected event. 
+- Skrev koden för att kunna skicka bilder till Backend API.
+- Deltog i handledarmötet med Husqvarna. 
+- Hade ett gruppmöte med hela teamet där vi diskuterade vad som togs upp på mötet med Husqvarna. 
+- Fixade koden för att mowern ska svänga åt olika håll när den hittar en linje eller får ett obstacle detected event. 
+- Diskuterade vidare kring low level requirements med mowergruppen. 
 
+Vecka 3
