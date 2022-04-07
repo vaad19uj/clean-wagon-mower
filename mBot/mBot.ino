@@ -128,18 +128,36 @@ void _delay(float seconds) {
   while(millis() < endTime) _loop();
 }
 
+void turn(){
+  static int turn = 0;
+
+  if (turn < 5){
+    //Turn right at 10% speed for 1 second
+    move(right, 15 / 100.0 * 255);
+    _delay(1);
+    move(right, 0);
+    }
+  else {
+    //Turn left at 10% speed for 1 second
+    move(left, 15 / 100.0 * 255);
+    _delay(1);
+    move(left, 0);
+    }
+
+    turn +=1;
+
+    if (turn == 10){
+      turn = 0;
+    }
+}
+
 void lineDetected(){
   //Move backward at 25% speed for 1 second
   move(backward, 25 / 100.0 * 255);
   _delay(1);
   move(backward, 0);
 
-  //TODO: randomize if mower should turn left or right
-
-  //Turn right at 10% speed for 1 second
-  move(right, 10 / 100.0 * 255);
-  _delay(1);
-  move(right, 0);
+  turn();
 }
 
 void obstacleDetected(){
@@ -155,12 +173,7 @@ void obstacleDetected(){
   _delay(1);
   move(backward, 0);
 
-  //TODO: randomize if mower should turn left or right
-
-  //Turn right at 20% speed for 1 second
-  move(right, 20 / 100.0 * 255);
-  _delay(1);
-  move(right, 0);
+  turn();
 }
 
 void runAutonomous(){
@@ -202,7 +215,7 @@ void setup() {
   attachInterrupt(Encoder_1.getIntNum(), isr_process_encoder1, RISING);
   attachInterrupt(Encoder_2.getIntNum(), isr_process_encoder2, RISING);
   randomSeed((unsigned long)(lightsensor_12.read() * 123456));
-
+  
   //TODO: Decide mode by input from app?
   operationMode mode = autonomous;
   while(1) {
