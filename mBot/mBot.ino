@@ -23,6 +23,10 @@ enum operationMode {
   remote
 };
 
+enum commands{
+  takePicture
+};
+
 struct coordinate{
   int x = 0;
   int y = 0;
@@ -162,12 +166,17 @@ void lineDetected(){
 }
 
 void obstacleDetected(){
+
+  commands cmd = takePicture;
+  
   //Stop moving
   move(stopMoving, 0);
+
+  //Flag that Rpi should take picture
+  Serial.println(cmd);
+  
   _delay(0.5);
   _delay(2);
-
-  //TODO: Flag to RPi to take picture here and send to backend?
 
   //Move backward at 25% speed for 1 second
   move(backward, 25 / 100.0 * 255);
@@ -216,7 +225,9 @@ void setup() {
   attachInterrupt(Encoder_1.getIntNum(), isr_process_encoder1, RISING);
   attachInterrupt(Encoder_2.getIntNum(), isr_process_encoder2, RISING);
   randomSeed((unsigned long)(lightsensor_12.read() * 123456));
-  
+
+  Serial.begin(9600);
+
   //TODO: Decide mode by input from app?
   operationMode mode = autonomous;
   while(1) {
