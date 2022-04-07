@@ -132,18 +132,37 @@ void _delay(float seconds) {
   while(millis() < endTime) _loop();
 }
 
+void turn(){
+  static int turnCounter = 0;
+
+  // turn to the right 5 times in a row, then switch to turning left 5 times in a row
+  if (turnCounter < 5){
+    //Turn right at 15% speed for 1 second
+    move(right, 15 / 100.0 * 255);
+    _delay(1);
+    move(right, 0);
+  }
+  else {
+    //Turn left at 15% speed for 1 second
+    move(left, 15 / 100.0 * 255);
+    _delay(1);
+    move(left, 0);
+  }
+
+  turnCounter +=1;
+
+  if (turnCounter == 10){
+    turnCounter = 0;
+  }
+}
+
 void lineDetected(){
   //Move backward at 25% speed for 1 second
   move(backward, 25 / 100.0 * 255);
   _delay(1);
   move(backward, 0);
 
-  //TODO: randomize if mower should turn left or right
-
-  //Turn right at 10% speed for 1 second
-  move(right, 10 / 100.0 * 255);
-  _delay(1);
-  move(right, 0);
+  turn();
 }
 
 void obstacleDetected(){
@@ -164,12 +183,7 @@ void obstacleDetected(){
   _delay(1);
   move(backward, 0);
 
-  //TODO: randomize if mower should turn left or right
-
-  //Turn right at 20% speed for 1 second
-  move(right, 20 / 100.0 * 255);
-  _delay(1);
-  move(right, 0);
+  turn();
 }
 
 void runAutonomous(){
