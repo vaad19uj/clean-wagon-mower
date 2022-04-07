@@ -6,6 +6,7 @@ from picamera import PiCamera
 from time import sleep
 
 def takePicture(camera):
+    camera.resolution = (1080, 768)
     camera.start_preview()
     sleep(1)
     camera.capture('/home/pi/Desktop/image.png')

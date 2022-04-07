@@ -23,7 +23,7 @@ enum operationMode {
   remote
 };
 
-enum commandsFromRpi{
+enum commands{
   takePicture
 };
 
@@ -148,7 +148,7 @@ void lineDetected(){
 
 void obstacleDetected(){
 
-  commandsFromRpi cmd = takePicture;
+  commands cmd = takePicture;
   
   //Stop moving
   move(stopMoving, 0);
