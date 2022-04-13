@@ -39,9 +39,6 @@ directions right = directionRight;
 directions forward = directionForward;
 directions stopMoving = directionStopMoving;
 
-//SoftwareSerial rpiSerial (10, 11); // RX, TX
-//SoftwareSerial bluetoothSerial (8, 9); // RX, TX
-
 void isr_process_encoder1(void)
 {
   if (digitalRead(Encoder_1.getPortB()) == 0) {
@@ -197,16 +194,8 @@ void runAutonomous() {
   if (ultrasonic_7.distanceCm() < distanceToObstacle) {
     obstacleDetected();
   } else {
-    //If line follower sensor detects left black
-    if ((0 ? (2 == 0 ? linefollower_6.readSensors() == 0 : (linefollower_6.readSensors() & 2) == 2) : (2 == 0 ? linefollower_6.readSensors() == 3 : (linefollower_6.readSensors() & 2) == 0))) {
-      lineDetected();
-    }
-    //If line follower sensor detects right black
-    if ((0 ? (1 == 0 ? linefollower_6.readSensors() == 0 : (linefollower_6.readSensors() & 1) == 1) : (1 == 0 ? linefollower_6.readSensors() == 3 : (linefollower_6.readSensors() & 1) == 0))) {
-      lineDetected();
-    }
-    //If line follower sensor detects BOTH black (necessary?)
-    if ((0 ? (3 == 0 ? linefollower_6.readSensors() == 0 : (linefollower_6.readSensors() & 3) == 3) : (3 == 0 ? linefollower_6.readSensors() == 3 : (linefollower_6.readSensors() & 3) == 0))) {
+    //If line follower sensor detects black
+    if(linefollower_6.readSensors() != 3){
       lineDetected();
     }
   }
@@ -251,15 +240,11 @@ void setup() {
   attachInterrupt(Encoder_2.getIntNum(), isr_process_encoder2, RISING);
   randomSeed((unsigned long)(lightsensor_12.read() * 123456));
 
-  Serial.begin(57600);
-
-  //bluetoothSerial.begin(9600);
-  //rpiSerial.begin(9600);
+  Serial.begin(9600);
 
   //TODO: Decide mode by input from app?
-  //operationMode mode = autonomous;
-
-  operationMode mode = bluetooth;
+  operationMode mode = autonomous;
+  //operationMode mode = bluetooth;
 
   while (1) {
 
