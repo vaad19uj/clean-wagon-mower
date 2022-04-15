@@ -195,7 +195,7 @@ void runAutonomous() {
     obstacleDetected();
   } else {
     //If line follower sensor detects black
-    if(linefollower_6.readSensors() != 3){
+    if (linefollower_6.readSensors() != 3) {
       lineDetected();
     }
   }
@@ -205,7 +205,7 @@ void runBluetooth() {
   if (Serial.available() > 0)
   {
     int cmd = Serial.read();
-    Serial.write(cmd);
+    //Serial.write(cmd);
 
     switch (cmd) {
       case '1':
@@ -215,9 +215,17 @@ void runBluetooth() {
         move(backward, 25 / 100.0 * 255);
         break;
       case '3':
-        move(left, 25 / 100.0 * 255);
+        //Turn left at 15% speed for 1 second
+        move(left, 15 / 100.0 * 255);
+        _delay(1);
+        move(left, 0);
+        move(forward, 25 / 100.0 * 255);
         break;
       case '4':
+        //Turn left at 15% speed for 1 second
+        move(right, 15 / 100.0 * 255);
+        _delay(1);
+        move(left, 0);
         move(right, 25 / 100.0 * 255);
         break;
       case '5':
