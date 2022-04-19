@@ -20,6 +20,7 @@ if __name__ == '__main__':
 
     while True:
         cmd = serBt.readline()
+        print(cmd)
         cmdAsInt = int(cmd)
         if cmdAsInt == 1:   #forward
             serArduino.write(1)

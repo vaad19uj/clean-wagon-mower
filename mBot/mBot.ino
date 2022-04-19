@@ -215,18 +215,18 @@ void runBluetooth() {
         move(backward, 25 / 100.0 * 255);
         break;
       case '3':
-        //Turn left at 15% speed for 1 second
-        move(left, 15 / 100.0 * 255);
+        //Turn left at 25% speed for 1 second
+        move(left, 25 / 100.0 * 255);
         _delay(1);
         move(left, 0);
         move(forward, 25 / 100.0 * 255);
         break;
       case '4':
-        //Turn left at 15% speed for 1 second
-        move(right, 15 / 100.0 * 255);
+        //Turn left at 25% speed for 1 second
+        move(right, 25 / 100.0 * 255);
         _delay(1);
         move(left, 0);
-        move(right, 25 / 100.0 * 255);
+        move(forward, 25 / 100.0 * 255);
         break;
       case '5':
         move(stopMoving, 0);
@@ -251,8 +251,8 @@ void setup() {
   Serial.begin(9600);
 
   //TODO: Decide mode by input from app?
-  operationMode mode = autonomous;
-  //operationMode mode = bluetooth;
+  //operationMode mode = autonomous;
+  operationMode mode = bluetooth;
 
   while (1) {
 
