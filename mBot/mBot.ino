@@ -14,20 +14,24 @@ enum directions {
   directionBackward,
   directionLeft,
   directionRight,
-  directionStopMoving 
+  directionStopMoving
 };
 
 enum operationMode {
+  notDecided,
   autonomous,
   bluetooth,
-  remote
+  stopRunning
 };
 
-enum commands{
-  takePicture
+enum commands {
+  obstacleDetected,
+  sendCoordinate,
+  startJourney,
+  stopJourney
 };
 
-struct coordinate{
+struct coordinate {
   int x = 0;
   int y = 0;
 };
@@ -38,49 +42,56 @@ directions left = directionLeft;
 directions right = directionRight;
 directions forward = directionForward;
 directions stopMoving = directionStopMoving;
+operationMode mode = notDecided;
 
 void isr_process_encoder1(void)
 {
-  if(digitalRead(Encoder_1.getPortB()) == 0){
+  if (digitalRead(Encoder_1.getPortB()) == 0) {
     Encoder_1.pulsePosMinus();
-  }else{
+  } else {
     Encoder_1.pulsePosPlus();
   }
 }
 void isr_process_encoder2(void)
 {
-  if(digitalRead(Encoder_2.getPortB()) == 0){
+  if (digitalRead(Encoder_2.getPortB()) == 0) {
     Encoder_2.pulsePosMinus();
-  }else{
+  } else {
     Encoder_2.pulsePosPlus();
   }
 }
 
-void positionData(directions direction, int speed){
-  //TODO: Calculate position based on direction and speed? Using dead reckoning 
+void sendCoordinateToRpi(int x, int y) {
+  Serial.println(sendCoordinate);
+  Serial.println(x);
+  Serial.println(y);
+}
 
-  switch(direction){
+void positionData(directions direction, int speed) {
+  //TODO: Calculate position based on direction and speed? Using dead reckoning
+
+  switch (direction) {
     case directionForward:
-    //  mowerPosition.y += ??
-    break;
+      //  mowerPosition.y += ??
+      break;
     case directionBackward:
-    //  mowerPosition.y -= ??
-    break;
+      //  mowerPosition.y -= ??
+      break;
     case directionLeft:
-    //  mowerPosition.x -= ??
-    break;
+      //  mowerPosition.x -= ??
+      break;
     case directionRight:
-    //  mowerPosition.x += ??
-    break;
+      //  mowerPosition.x += ??
+      break;
     case directionStopMoving:
-      // do nothing, position is not changing 
-    break;
+      // do nothing, position is not changing
+      break;
     default:
-    // do nothing
-    break; 
+      // do nothing
+      break;
   }
 
-  //TODO: Send new position to backend 
+  sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
 }
 
 //Function to move robot
@@ -89,54 +100,56 @@ void move(directions direction, int speed)
   int leftSpeed = 0;
   int rightSpeed = 0;
 
-  //positionData(direction, speed);
-  // do we need to add duration here? So we know how long we are travelling in one direction?
+  //We only send position data to backend while being in autonomous mode
+  if (mode == autonomous) {
+    positionData(direction, speed);
+  }
 
   //Set the direction of 2 motors' movement
-  switch(direction){
+  switch (direction) {
     case directionForward:
       leftSpeed = -speed;
       rightSpeed = speed;
-    break;
+      break;
     case directionBackward:
-     leftSpeed = speed;
-     rightSpeed = -speed;
-    break;
+      leftSpeed = speed;
+      rightSpeed = -speed;
+      break;
     case directionLeft:
       leftSpeed = -speed;
       rightSpeed = -speed;
-    break;
+      break;
     case directionRight:
       leftSpeed = speed;
       rightSpeed = speed;
-    break;
+      break;
     case directionStopMoving:
       // 0
       leftSpeed = speed;
       rightSpeed = speed;
-    break;
+      break;
     default:
-    // do nothing
-    break; 
+      // do nothing
+      break;
   }
-  
+
   Encoder_1.setTarPWM(leftSpeed);
   Encoder_2.setTarPWM(rightSpeed);
 }
 
 void _delay(float seconds) {
-  if(seconds < 0.0){
+  if (seconds < 0.0) {
     seconds = 0.0;
   }
   long endTime = millis() + seconds * 1000;
-  while(millis() < endTime) _loop();
+  while (millis() < endTime) _loop();
 }
 
-void turn(){
+void turn() {
   static int turnCounter = 0;
 
   // turn to the right 5 times in a row, then switch to turning left 5 times in a row
-  if (turnCounter < 5){
+  if (turnCounter < 5) {
     //Turn right at 15% speed for 1 second
     move(right, 15 / 100.0 * 255);
     _delay(1);
@@ -149,14 +162,14 @@ void turn(){
     move(left, 0);
   }
 
-  turnCounter +=1;
+  turnCounter += 1;
 
-  if (turnCounter == 10){
+  if (turnCounter == 10) {
     turnCounter = 0;
   }
 }
 
-void lineDetected(){
+void lineDetected() {
   //Move backward at 25% speed for 1 second
   move(backward, 25 / 100.0 * 255);
   _delay(1);
@@ -165,16 +178,18 @@ void lineDetected(){
   turn();
 }
 
-void obstacleDetected(){
+void obstacleDetectedEvent() {
 
-  commands cmd = takePicture;
-  
+  commands cmd = obstacleDetected;
+
   //Stop moving
   move(stopMoving, 0);
 
-  //Flag that Rpi should take picture
+  //Flag to Rpi that obstacle avoidance event occured
   Serial.println(cmd);
-  
+  Serial.println(mowerPosition.x);
+  Serial.println(mowerPosition.y);
+
   _delay(0.5);
   _delay(2);
 
@@ -186,35 +201,52 @@ void obstacleDetected(){
   turn();
 }
 
-void runAutonomous(){
+void runAutonomous() {
   int distanceToObstacle = 25;
-  
+
   //Move forward at 25% speed
   move(forward, 25 / 100.0 * 255);
-  if(ultrasonic_7.distanceCm() < distanceToObstacle){
-      obstacleDetected();
-  }else{
-      //If line follower sensor detects left black
-      if((0?(2==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 2)==2):(2==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 2)==0))){
-        lineDetected();
-      }
-      //If line follower sensor detects right black
-      if((0?(1==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 1)==1):(1==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 1)==0))){
-        lineDetected();
-      }
-      //If line follower sensor detects BOTH black (necessary?)
-      if((0?(3==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 3)==3):(3==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 3)==0))){
-        lineDetected();
-      }
+  if (ultrasonic_7.distanceCm() < distanceToObstacle) {
+    obstacleDetectedEvent();
+  } else {
+    //If line follower sensor detects black
+    if (linefollower_6.readSensors() != 3) {
+      lineDetected();
+    }
   }
 }
 
-void runBluetooth(){
-  //TODO: Run mower by Bluetooth commands sent from app?
-}
+void runBluetooth() {
+  if (Serial.available() > 0)
+  {
+    int cmd = Serial.read();
 
-void runRemote(){
-  //TODO: Run mower by command from app, sent from backend?
+    switch (cmd) {
+      case '1':
+        move(forward, 25 / 100.0 * 255);
+        break;
+      case '2':
+        move(backward, 25 / 100.0 * 255);
+        break;
+      case '3':
+        //Turn left at 25% speed for 1 second
+        move(left, 25 / 100.0 * 255);
+        _delay(1);
+        move(left, 0);
+        move(forward, 25 / 100.0 * 255);
+        break;
+      case '4':
+        //Turn left at 25% speed for 1 second
+        move(right, 25 / 100.0 * 255);
+        _delay(1);
+        move(left, 0);
+        move(forward, 25 / 100.0 * 255);
+        break;
+      case '5':
+        move(stopMoving, 0);
+        break;
+    }
+  }
 }
 
 void setup() {
@@ -228,24 +260,52 @@ void setup() {
 
   Serial.begin(9600);
 
-  //TODO: Decide mode by input from app?
-  operationMode mode = autonomous;
-  while(1) {
+  commands startJourney = startJourney;
+  commands stopJourney = stopJourney;
 
-    switch(mode){
+  mowerPosition.x = 0;
+  mowerPosition.y = 0;
+
+  mode = autonomous;
+
+  Serial.println(startJourney);
+  sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
+
+  while (1) {
+
+ /*   if (Serial.available() > 0) {
+      char modeInput = Serial.read();
+      switch (modeInput) {
+        case 'a':
+          mode = autonomous;
+          Serial.println(startJourney);
+          sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
+          break;
+        case 'b':
+          mode = bluetooth;
+          break;
+        case 's':
+          mode = stopRunning;
+          break;
+      }
+    }*/
+
+    switch (mode) {
       case autonomous:
         runAutonomous();
-      break;
+        break;
       case bluetooth:
         runBluetooth();
-      break;
-      case remote:
-        runRemote();
-      break;
+        break;
+      case stopRunning:
+        Serial.println(stopJourney);
+        Serial.println(mowerPosition.x);
+        Serial.println(mowerPosition.y);
+        move(stopMoving, 0);
       default:
-      break;
+        break;
     }
-      _loop();
+    _loop();
   }
 }
 
