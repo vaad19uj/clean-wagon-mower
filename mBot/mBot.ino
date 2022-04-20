@@ -43,6 +43,10 @@ directions right = directionRight;
 directions forward = directionForward;
 directions stopMoving = directionStopMoving;
 operationMode mode = notDecided;
+unsigned long runningForwardTime;
+unsigned long backingTime;
+unsigned long turningTime;
+unsigned long stopTime;
 
 void isr_process_encoder1(void)
 {
@@ -68,20 +72,31 @@ void sendCoordinateToRpi(int x, int y) {
 }
 
 void positionData(directions direction, int speed) {
-  //TODO: Calculate position based on direction and speed? Using dead reckoning
+
+  //distance = speed × time
+  int distance = 0;
+  unsigned long timePassed = 0;
 
   switch (direction) {
     case directionForward:
-      //  mowerPosition.y += ??
+      timePassed = stopTime - runningForwardTime;
+      distance = timePassed * speed;
+      mowerPosition.y += distance;
       break;
     case directionBackward:
-      //  mowerPosition.y -= ??
+      timePassed = turningTime - backingTime;
+      distance = timePassed * speed;
+      mowerPosition.y -= distance;
       break;
     case directionLeft:
-      //  mowerPosition.x -= ??
+      timePassed = runningForwardTime - turningTime;
+      distance = timePassed * speed;
+      mowerPosition.x -= distance;
       break;
     case directionRight:
-      //  mowerPosition.x += ??
+      timePassed = runningForwardTime - turningTime;
+      distance = timePassed * speed;
+      mowerPosition.x += distance;
       break;
     case directionStopMoving:
       // do nothing, position is not changing
@@ -90,7 +105,7 @@ void positionData(directions direction, int speed) {
       // do nothing
       break;
   }
-
+  
   sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
 }
 
@@ -151,12 +166,14 @@ void turn() {
   // turn to the right 5 times in a row, then switch to turning left 5 times in a row
   if (turnCounter < 5) {
     //Turn right at 15% speed for 1 second
+    turningTime = millis();
     move(right, 15 / 100.0 * 255);
     _delay(1);
     move(right, 0);
   }
   else {
     //Turn left at 15% speed for 1 second
+    turningTime = millis();
     move(left, 15 / 100.0 * 255);
     _delay(1);
     move(left, 0);
@@ -170,7 +187,13 @@ void turn() {
 }
 
 void lineDetected() {
+  //Stop moving
+  stopTime = millis();
+  move(stopMoving, 0);
+  _delay(0.5);
+
   //Move backward at 25% speed for 1 second
+  backingTime = millis();
   move(backward, 25 / 100.0 * 255);
   _delay(1);
   move(backward, 0);
@@ -183,6 +206,7 @@ void obstacleDetectedEvent() {
   commands cmd = obstacleDetected;
 
   //Stop moving
+  stopTime = millis();
   move(stopMoving, 0);
 
   //Flag to Rpi that obstacle avoidance event occured
@@ -194,6 +218,7 @@ void obstacleDetectedEvent() {
   _delay(2);
 
   //Move backward at 25% speed for 1 second
+  backingTime = millis();
   move(backward, 25 / 100.0 * 255);
   _delay(1);
   move(backward, 0);
@@ -204,6 +229,7 @@ void obstacleDetectedEvent() {
 void runAutonomous() {
   int distanceToObstacle = 25;
 
+  runningForwardTime = millis();
   //Move forward at 25% speed
   move(forward, 25 / 100.0 * 255);
   if (ultrasonic_7.distanceCm() < distanceToObstacle) {
@@ -271,24 +297,30 @@ void setup() {
   Serial.println(startJourney);
   sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
 
+  //used to calculate how long the mower has been running forward since the start
+  stopTime = millis();
+
+  //for testing
+  int counter = 0;
+
   while (1) {
 
- /*   if (Serial.available() > 0) {
-      char modeInput = Serial.read();
-      switch (modeInput) {
-        case 'a':
-          mode = autonomous;
-          Serial.println(startJourney);
-          sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
-          break;
-        case 'b':
-          mode = bluetooth;
-          break;
-        case 's':
-          mode = stopRunning;
-          break;
-      }
-    }*/
+    /*   if (Serial.available() > 0) {
+         char modeInput = Serial.read();
+         switch (modeInput) {
+           case 'a':
+             mode = autonomous;
+             Serial.println(startJourney);
+             sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
+             break;
+           case 'b':
+             mode = bluetooth;
+             break;
+           case 's':
+             mode = stopRunning;
+             break;
+         }
+       }*/
 
     switch (mode) {
       case autonomous:
@@ -302,9 +334,17 @@ void setup() {
         Serial.println(mowerPosition.x);
         Serial.println(mowerPosition.y);
         move(stopMoving, 0);
+        stopTime = millis();
       default:
         break;
     }
+
+    // for testing
+    counter++;
+    if (counter == 1000) {
+      mode = stopRunning;
+    }
+
     _loop();
   }
 }
