@@ -1,14 +1,18 @@
 import socket
 
-hostMACAddress = '00:1f:e1:dd:08:3d' # The MAC address of a Bluetooth adapter on the server. 
+hostMACAddress = 'B8:27:EB:3A:D7:A4' # The MAC address of a Bluetooth adapter on the server. 
 port = 3 # 3 is an arbitrary choice. However, it must match the port used by the client.
 backlog = 1
 size = 1024
 s = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
 s.bind((hostMACAddress,port))
+print("socket bind")
 s.listen(backlog)
+print("socket listening")
 try:
+    print("waiting for connection")
     client, address = s.accept()
+    print("Accepted connection from ", address)
     while 1:
         data = client.recv(size)
         if data:
@@ -19,7 +23,6 @@ except:
     client.close()
     s.close()
 
-##########################################################
 
 # import socket
 # import serial
