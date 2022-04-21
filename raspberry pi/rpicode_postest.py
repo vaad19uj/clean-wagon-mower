@@ -15,12 +15,20 @@ mowerId = 2
 coordinateId = -2
 baseURL = 'http://ec2-16-170-167-138.eu-north-1.compute.amazonaws.com/api/v1/'
 
+#def takePicture(camera):
+#    camera.resolution = (1080, 768)
+#    camera.start_preview()
+#    sleep(1)
+#    camera.capture('/home/pi/Desktop/image.png')
+#    camera.stop_preview()
+
+#    fileName = 'image.png'
+#    filePath = '/home/pi/Desktop/image.png'
+#    obstacleImg =[('image',(fileName,open(filePath,'rb'),'image/png'))]   
+
+#    return obstacleImg
+
 def takePicture(camera):
-    camera.resolution = (1080, 768)
-    camera.start_preview()
-    sleep(1)
-    camera.capture('/home/pi/Desktop/image.png')
-    camera.stop_preview()
 
     fileName = 'image.png'
     filePath = '/home/pi/Desktop/image.png'
@@ -92,7 +100,7 @@ while True:
     elif cmdAsInt == 3:
         x = ser.readline()
         y = ser.readline()
-        stopJourney(x, y)
+        stopJourney(journeyId, x, y)
 
 
 

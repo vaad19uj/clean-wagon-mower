@@ -24,6 +24,12 @@ enum operationMode {
   stopRunning
 };
 
+enum lastTurn {
+  none,
+  leftTurn,
+  rightTurn
+};
+
 enum commands {
   obstacleDetected,
   sendCoordinate,
@@ -43,6 +49,7 @@ directions right = directionRight;
 directions forward = directionForward;
 directions stopMoving = directionStopMoving;
 operationMode mode = notDecided;
+lastTurn lastTurn = none;
 unsigned long runningForwardTime;
 unsigned long backingTime;
 unsigned long turningTime;
@@ -66,7 +73,8 @@ void isr_process_encoder2(void)
 }
 
 void sendCoordinateToRpi(int x, int y) {
-  Serial.println(sendCoordinate);
+  commands cmd = sendCoordinate;
+  Serial.println(cmd);
   Serial.println(x);
   Serial.println(y);
 }
@@ -79,33 +87,41 @@ void positionData(directions direction, int speed) {
 
   switch (direction) {
     case directionForward:
-      timePassed = stopTime - runningForwardTime;
-      distance = timePassed * speed;
-      mowerPosition.y += distance;
+      //When running forward, we calculate how long the mower was turning left or right
+      //But only if a turn has been made 
+      if (turningTime != -2) {
+        timePassed = runningForwardTime - turningTime;
+        distance = timePassed * speed;
+
+        if (lastTurn == leftTurn) {
+        }
+        else if (lastTurn == rightTurn) {
+        }
+      }
       break;
     case directionBackward:
-      timePassed = turningTime - backingTime;
-      distance = timePassed * speed;
-      mowerPosition.y -= distance;
+      //When backing, do nothing since the mower was been standing still before
       break;
     case directionLeft:
-      timePassed = runningForwardTime - turningTime;
+      //When turning, calculate how long the mower was backing
+      timePassed = turningTime - backingTime;
       distance = timePassed * speed;
-      mowerPosition.x -= distance;
       break;
     case directionRight:
-      timePassed = runningForwardTime - turningTime;
+      //When turning, calculate how long the mower was backing
+      timePassed = turningTime - backingTime;
       distance = timePassed * speed;
-      mowerPosition.x += distance;
       break;
     case directionStopMoving:
-      // do nothing, position is not changing
+      // When stopping, we calculate how long the mower has been running forward
+      timePassed = stopTime - runningForwardTime;
+      distance = timePassed * speed;
       break;
     default:
       // do nothing
       break;
   }
-  
+
   sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
 }
 
@@ -165,16 +181,18 @@ void turn() {
 
   // turn to the right 5 times in a row, then switch to turning left 5 times in a row
   if (turnCounter < 5) {
-    //Turn right at 15% speed for 1 second
+    lastTurn = rightTurn;
+    //Turn right at 25% speed for 1 second
     turningTime = millis();
-    move(right, 15 / 100.0 * 255);
+    move(right, 25 / 100.0 * 255);
     _delay(1);
     move(right, 0);
   }
   else {
-    //Turn left at 15% speed for 1 second
+    //Turn left at 25% speed for 1 second
+    lastTurn = leftTurn;
     turningTime = millis();
-    move(left, 15 / 100.0 * 255);
+    move(left, 25 / 100.0 * 255);
     _delay(1);
     move(left, 0);
   }
@@ -286,22 +304,19 @@ void setup() {
 
   Serial.begin(9600);
 
-  commands startJourney = startJourney;
-  commands stopJourney = stopJourney;
+  commands cmdStartJourney = startJourney;
+  commands cmdStopJourney = stopJourney;
 
   mowerPosition.x = 0;
   mowerPosition.y = 0;
 
+  //TODO: wait for mobile phone to tell us to start running autonomous and then send startJourney
   mode = autonomous;
-
-  Serial.println(startJourney);
+  Serial.println(cmdStartJourney);
   sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
 
-  //used to calculate how long the mower has been running forward since the start
-  stopTime = millis();
-
-  //for testing
-  int counter = 0;
+  //set to "bad value" when no turns has been made yet
+  turningTime = -2;
 
   while (1) {
 
@@ -330,19 +345,18 @@ void setup() {
         runBluetooth();
         break;
       case stopRunning:
-        Serial.println(stopJourney);
+        Serial.println(cmdStopJourney);
         Serial.println(mowerPosition.x);
         Serial.println(mowerPosition.y);
-        move(stopMoving, 0);
         stopTime = millis();
+        move(stopMoving, 0);
+        break;
       default:
         break;
     }
 
-    // for testing
-    counter++;
-    if (counter == 1000) {
-      mode = stopRunning;
+    if(mode == stopRunning){
+      break;
     }
 
     _loop();
