@@ -18,3 +18,16 @@ Vecka 2
 - Diskuterade vidare kring low level requirements med mowergruppen. 
 
 Vecka 3
+- Deltog i sprintplaneringsmötet med gruppen, där vi diskuterade veckans tasks och estimerade poäng för varje task.
+- Började leta efter dokumentation över hur Bluetooth-modulen som vi fick med Arduinon fungerar. Upptäckte att modulen var kopplad till samma TX/RX som USB-porten, så vi bestämde att vi skulle köra Bluetooth på Rpin istället.  
+- Började läsa på om hur det fungerar med Bluetooth på rpin. 
+- Deltog i handledarmötet med Husqvarna.
+- Skrev koden för Serial Port profile (SPP) Bluetooth och sockets till raspberry pin. 
+
+Vecka 4
+- Deltog i sprintplaneringsmötet med gruppen, där vi diskuterade veckans tasks och estimerade poäng för varje task.
+- Satte upp konfigureringen för SPP Bluetooth på rpin. 
+- Testade Bluetooth SPP koden på rpin tillsammans med en terminalapp. Vi fick inte det att fungera, så vi testade socket-lösningen istället. 
+- Bluetooth slutade fungera helt på rpin, så vi spenderade en eftermiddag med att felsöka det. Visade sig ha blivit ett fel i en config-fil. 
+- Skrev koden för att kunna starta och stoppa en "journey" och kunna skicka koordinater, från mowern till backend. Testade även koden manuellt tillsammans med backend för att se om det fungerade som det skulle. 
+- Började jobba med positioneringsalgoritmen, för att mowern ska kunna räkna ut sin egna position. 
