@@ -8,13 +8,15 @@ MeEncoderOnBoard Encoder_2(SLOT2);
 MeUltrasonicSensor ultrasonic_7(7);
 MeLineFollower linefollower_6(6);
 MeLightSensor lightsensor_12(12);
+MeGyro gyro_0(0, 0x69);
 
 enum directions {
   directionForward,
   directionBackward,
   directionLeft,
   directionRight,
-  directionStopMoving
+  directionStopMoving,
+  noDirection
 };
 
 enum operationMode {
@@ -48,6 +50,7 @@ directions left = directionLeft;
 directions right = directionRight;
 directions forward = directionForward;
 directions stopMoving = directionStopMoving;
+directions lastDirection = noDirection;
 operationMode mode = notDecided;
 lastTurn lastTurn = none;
 unsigned long runningForwardTime;
@@ -80,23 +83,39 @@ void sendCoordinateToRpi(int x, int y) {
 }
 
 void positionData(directions direction, int speed) {
-
-  //distance = speed × time
   int distance = 0;
   unsigned long timePassed = 0;
 
+  double angle = fmod(gyro_0.getAngle(3), 360.0);
+  double angleInRad = radians(angle);
+
+  /*  Serial.println("angle: ");
+    Serial.println(angle);
+    Serial.println("angle in rad: ");
+    Serial.println(angleInRad);*/
+
   switch (direction) {
     case directionForward:
-      //When running forward, we calculate how long the mower was turning left or right
-      //But only if a turn has been made 
+
       if (turningTime != -2) {
+        //When running forward, we calculate how long the mower was turning left or right
         timePassed = runningForwardTime - turningTime;
+        timePassed = timePassed / 1000;
         distance = timePassed * speed;
 
-        if (lastTurn == leftTurn) {
-        }
-        else if (lastTurn == rightTurn) {
-        }
+        /*   Serial.println("time passed: ");
+           Serial.println(timePassed);
+           Serial.println("distance: ");
+           Serial.println(distance);*/
+
+        mowerPosition.x += distance * cos(angleInRad);
+        mowerPosition.y += distance * sin(angleInRad);
+
+        /*    Serial.println("x: ");
+            Serial.println(mowerPosition.x);
+            Serial.println("y: ");
+            Serial.println(mowerPosition.y);
+        */
       }
       break;
     case directionBackward:
@@ -105,17 +124,29 @@ void positionData(directions direction, int speed) {
     case directionLeft:
       //When turning, calculate how long the mower was backing
       timePassed = turningTime - backingTime;
+      timePassed = timePassed / 1000;
       distance = timePassed * speed;
+
+      mowerPosition.x += distance * cos(angleInRad);
+      mowerPosition.y += distance * sin(angleInRad);
       break;
     case directionRight:
       //When turning, calculate how long the mower was backing
       timePassed = turningTime - backingTime;
+      timePassed = timePassed / 1000;
       distance = timePassed * speed;
+
+      mowerPosition.x += distance * cos(angleInRad);
+      mowerPosition.y += distance * sin(angleInRad);
       break;
     case directionStopMoving:
       // When stopping, we calculate how long the mower has been running forward
       timePassed = stopTime - runningForwardTime;
+      timePassed = timePassed / 1000;
       distance = timePassed * speed;
+
+      mowerPosition.x += distance * cos(angleInRad);
+      mowerPosition.y += distance * sin(angleInRad);
       break;
     default:
       // do nothing
@@ -132,9 +163,11 @@ void move(directions direction, int speed)
   int rightSpeed = 0;
 
   //We only send position data to backend while being in autonomous mode
-  if (mode == autonomous) {
+  if (mode == autonomous && lastDirection != direction) {
     positionData(direction, speed);
   }
+
+  lastDirection = direction;
 
   //Set the direction of 2 motors' movement
   switch (direction) {
@@ -303,6 +336,7 @@ void setup() {
   randomSeed((unsigned long)(lightsensor_12.read() * 123456));
 
   Serial.begin(9600);
+  gyro_0.begin();
 
   commands cmdStartJourney = startJourney;
   commands cmdStopJourney = stopJourney;
@@ -355,7 +389,7 @@ void setup() {
         break;
     }
 
-    if(mode == stopRunning){
+    if (mode == stopRunning) {
       break;
     }
 
@@ -364,6 +398,7 @@ void setup() {
 }
 
 void _loop() {
+  gyro_0.update();
   Encoder_1.loop();
   Encoder_2.loop();
 }
