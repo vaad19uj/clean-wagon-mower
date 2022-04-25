@@ -57,6 +57,7 @@ unsigned long runningForwardTime;
 unsigned long backingTime;
 unsigned long turningTime;
 unsigned long stopTime;
+bool updateStartTime = true;
 
 void isr_process_encoder1(void)
 {
@@ -89,11 +90,6 @@ void positionData(directions direction, int speed) {
   double angle = fmod(gyro_0.getAngle(3), 360.0);
   double angleInRad = radians(angle);
 
-  /*  Serial.println("angle: ");
-    Serial.println(angle);
-    Serial.println("angle in rad: ");
-    Serial.println(angleInRad);*/
-
   switch (direction) {
     case directionForward:
 
@@ -103,19 +99,8 @@ void positionData(directions direction, int speed) {
         timePassed = timePassed / 1000;
         distance = timePassed * speed;
 
-        /*   Serial.println("time passed: ");
-           Serial.println(timePassed);
-           Serial.println("distance: ");
-           Serial.println(distance);*/
-
         mowerPosition.x += distance * cos(angleInRad);
         mowerPosition.y += distance * sin(angleInRad);
-
-        /*    Serial.println("x: ");
-            Serial.println(mowerPosition.x);
-            Serial.println("y: ");
-            Serial.println(mowerPosition.y);
-        */
       }
       break;
     case directionBackward:
@@ -215,17 +200,17 @@ void turn() {
   // turn to the right 5 times in a row, then switch to turning left 5 times in a row
   if (turnCounter < 5) {
     lastTurn = rightTurn;
-    //Turn right at 25% speed for 1 second
+    //Turn right at 20% speed for 1 second
     turningTime = millis();
-    move(right, 25 / 100.0 * 255);
+    move(right, 20 / 100.0 * 255);
     _delay(1);
     move(right, 0);
   }
   else {
-    //Turn left at 25% speed for 1 second
+    //Turn left at 20% speed for 1 second
     lastTurn = leftTurn;
     turningTime = millis();
-    move(left, 25 / 100.0 * 255);
+    move(left, 20 / 100.0 * 255);
     _delay(1);
     move(left, 0);
   }
@@ -237,15 +222,15 @@ void turn() {
   }
 }
 
-void lineDetected() {
+void lineDetectedEvent() {
   //Stop moving
   stopTime = millis();
   move(stopMoving, 0);
   _delay(0.5);
 
-  //Move backward at 25% speed for 1 second
+  //Move backward at 20% speed for 1 second
   backingTime = millis();
-  move(backward, 25 / 100.0 * 255);
+  move(backward, 20 / 100.0 * 255);
   _delay(1);
   move(backward, 0);
 
@@ -268,9 +253,9 @@ void obstacleDetectedEvent() {
   _delay(0.5);
   _delay(2);
 
-  //Move backward at 25% speed for 1 second
+  //Move backward at 20% speed for 1 second
   backingTime = millis();
-  move(backward, 25 / 100.0 * 255);
+  move(backward, 20 / 100.0 * 255);
   _delay(1);
   move(backward, 0);
 
@@ -280,16 +265,22 @@ void obstacleDetectedEvent() {
 void runAutonomous() {
   int distanceToObstacle = 25;
 
-  runningForwardTime = millis();
-  //Move forward at 25% speed
-  move(forward, 25 / 100.0 * 255);
+  if (updateStartTime) {
+    runningForwardTime = millis();
+    updateStartTime = false;
+  }
+  
+  //Move forward at 20% speed
+  move(forward, 20 / 100.0 * 255);
+
   if (ultrasonic_7.distanceCm() < distanceToObstacle) {
     obstacleDetectedEvent();
-  } else {
+    updateStartTime = true;
+
+  } else if (linefollower_6.readSensors() != 3) {
     //If line follower sensor detects black
-    if (linefollower_6.readSensors() != 3) {
-      lineDetected();
-    }
+    lineDetectedEvent();
+    updateStartTime = true;
   }
 }
 
@@ -300,24 +291,24 @@ void runBluetooth() {
 
     switch (cmd) {
       case '1':
-        move(forward, 25 / 100.0 * 255);
+        move(forward, 20 / 100.0 * 255);
         break;
       case '2':
-        move(backward, 25 / 100.0 * 255);
+        move(backward, 20 / 100.0 * 255);
         break;
       case '3':
-        //Turn left at 25% speed for 1 second
-        move(left, 25 / 100.0 * 255);
+        //Turn left at 20% speed for 1 second
+        move(left, 20 / 100.0 * 255);
         _delay(1);
         move(left, 0);
-        move(forward, 25 / 100.0 * 255);
+        move(forward, 20 / 100.0 * 255);
         break;
       case '4':
-        //Turn left at 25% speed for 1 second
-        move(right, 25 / 100.0 * 255);
+        //Turn left at 20% speed for 1 second
+        move(right, 20 / 100.0 * 255);
         _delay(1);
         move(left, 0);
-        move(forward, 25 / 100.0 * 255);
+        move(forward, 20 / 100.0 * 255);
         break;
       case '5':
         move(stopMoving, 0);
@@ -344,12 +335,31 @@ void setup() {
   mowerPosition.x = 0;
   mowerPosition.y = 0;
 
-  //TODO: wait for mobile phone to tell us to start running autonomous and then send startJourney
+  //Wait for rpi to tell us to the operation mode
+  /*
+    while (Serial.avaliable() == 0) {}
+
+    char modeInput = Serial.read();
+    switch (modeInput) {
+    case 'a':
+      //Start running autonomous and then send startJourney command
+      mode = autonomous;
+      Serial.println(startJourney);
+      sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
+      break;
+    case 'b':
+      mode = bluetooth;
+      break;
+    case default:
+    break;
+    }
+  */
+
   mode = autonomous;
   Serial.println(cmdStartJourney);
   sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
 
-  //set to "bad value" when no turns has been made yet
+  //Used to calculate coordinates, set to "bad value" when no turns has been made yet
   turningTime = -2;
 
   while (1) {
@@ -357,17 +367,11 @@ void setup() {
     /*   if (Serial.available() > 0) {
          char modeInput = Serial.read();
          switch (modeInput) {
-           case 'a':
-             mode = autonomous;
-             Serial.println(startJourney);
-             sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
-             break;
-           case 'b':
-             mode = bluetooth;
-             break;
            case 's':
              mode = stopRunning;
              break;
+           case default:
+           break;
          }
        }*/
 
