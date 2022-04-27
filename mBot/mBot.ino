@@ -33,6 +33,12 @@ enum lastTurn {
   rightTurn
 };
 
+enum autonomousModeStates {
+  notDecidedState,
+  runningState,
+  stopRunningState
+};
+
 enum commands {
   obstacleDetected,
   sendCoordinate,
@@ -53,6 +59,7 @@ directions forward = directionForward;
 directions stopMoving = directionStopMoving;
 directions lastDirection = noDirection;
 operationMode mode = notDecided;
+autonomousModeStates autoMode = notDecidedState;
 lastTurn lastTurn = none;
 unsigned long runningForwardTime;
 unsigned long backingTime;
@@ -265,31 +272,54 @@ void obstacleDetectedEvent() {
 
 void runAutonomous() {
   int distanceToObstacle = 25;
+  commands cmdStopJourney = stopJourney;
+  autoMode = runningState;
 
-  if (updateStartTime) {
-    runningForwardTime = millis();
-    updateStartTime = false;
+  if (Serial.available() > 0)
+  {
+    char cmd = Serial.read();
+    if (cmd == 's') {
+      autoMode = stopRunningState;
+    }
   }
 
-  //Move forward at 20% speed
-  move(forward, 20 / 100.0 * 255);
+  switch (autoMode) {
+    case runningState:
+      if (updateStartTime) {
+        runningForwardTime = millis();
+        updateStartTime = false;
+      }
 
-  if (ultrasonic_7.distanceCm() < distanceToObstacle) {
-    obstacleDetectedEvent();
-    updateStartTime = true;
+      //Move forward at 20% speed
+      move(forward, 20 / 100.0 * 255);
 
-  } else if (linefollower_6.readSensors() != 3) {
-    //If line follower sensor detects black
-    lineDetectedEvent();
-    updateStartTime = true;
+      if (ultrasonic_7.distanceCm() < distanceToObstacle) {
+        updateStartTime = true;
+        obstacleDetectedEvent();
+      } else if (linefollower_6.readSensors() != 3) {
+        //If line follower sensor detects black
+        updateStartTime = true;
+        lineDetectedEvent();
+      }
+      break;
+    case stopRunningState:
+      mode = stopAutonomous;
+      Serial.println(cmdStopJourney);
+      Serial.println(mowerPosition.x);
+      Serial.println(mowerPosition.y);
+      stopTime = millis();
+      move(stopMoving, 0);
+      break;
+    default:
+      break;
   }
 }
 
 void runBluetooth() {
   if (Serial.available() > 0)
   {
-    int cmd = Serial.read();
-    
+    char cmd = Serial.read();
+
     switch (cmd) {
       case '1':
         move(forward, 20 / 100.0 * 255);
@@ -314,28 +344,15 @@ void runBluetooth() {
       case '5':
         move(stopMoving, 0);
         break;
+      case 'd':
+        move(stopMoving, 0);
+        mode = stopBluetooth;
+        break;
     }
   }
 }
 
-void setup() {
-  TCCR1A = _BV(WGM10);
-  TCCR1B = _BV(CS11) | _BV(WGM12);
-  TCCR2A = _BV(WGM21) | _BV(WGM20);
-  TCCR2B = _BV(CS21);
-  attachInterrupt(Encoder_1.getIntNum(), isr_process_encoder1, RISING);
-  attachInterrupt(Encoder_2.getIntNum(), isr_process_encoder2, RISING);
-  randomSeed((unsigned long)(lightsensor_12.read() * 123456));
-
-  Serial.begin(9600);
-  gyro_0.begin();
-
-  commands cmdStartJourney = startJourney;
-  commands cmdStopJourney = stopJourney;
-
-  mowerPosition.x = 0;
-  mowerPosition.y = 0;
-
+void decideOperationMode() {
   //Wait for rpi to tell us to the operation mode
   while (Serial.available() == 0) {}
 
@@ -353,6 +370,26 @@ void setup() {
     default:
       break;
   }
+}
+
+void setup() {
+  TCCR1A = _BV(WGM10);
+  TCCR1B = _BV(CS11) | _BV(WGM12);
+  TCCR2A = _BV(WGM21) | _BV(WGM20);
+  TCCR2B = _BV(CS21);
+  attachInterrupt(Encoder_1.getIntNum(), isr_process_encoder1, RISING);
+  attachInterrupt(Encoder_2.getIntNum(), isr_process_encoder2, RISING);
+  randomSeed((unsigned long)(lightsensor_12.read() * 123456));
+
+  Serial.begin(9600);
+  gyro_0.begin();
+
+  commands cmdStartJourney = startJourney;
+
+  mowerPosition.x = 0;
+  mowerPosition.y = 0;
+
+  decideOperationMode();
 
   //Used to calculate coordinates, set to "bad value" when no turns has been made yet
   turningTime = -2;
@@ -367,34 +404,14 @@ void setup() {
         runBluetooth();
         break;
       case stopAutonomous:
-        Serial.println(cmdStopJourney);
-        Serial.println(mowerPosition.x);
-        Serial.println(mowerPosition.y);
-        stopTime = millis();
-        move(stopMoving, 0);
+        //decideOperationMode();
         break;
       case stopBluetooth:
-        move(stopMoving, 0);
+        //decideOperationMode();
         break;
       default:
         break;
     }
-
-  /*  if (Serial.available() > 0) {
-      char modeInput = Serial.read();
-      switch (modeInput) {
-        case 's':
-          mode = stopAutonomous;
-          break;
-        case 'd':
-          mode = stopBluetooth;
-          break;
-        default:
-          break;
-      }
-    }
-
-    */
 
     if (mode == stopAutonomous || mode == stopBluetooth) {
       break;
