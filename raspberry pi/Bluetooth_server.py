@@ -63,7 +63,6 @@ while True:
             serArduino.write(4)
         elif cmd == "STOPMOVING":
             serArduino.write(5)
-            pass 
 
     except IOError:
         pass
