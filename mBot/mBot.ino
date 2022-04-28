@@ -23,8 +23,7 @@ enum operationMode {
   notDecided,
   autonomous,
   bluetooth,
-  stopAutonomous,
-  stopBluetooth
+  detectMode
 };
 
 enum lastTurn {
@@ -270,6 +269,27 @@ void obstacleDetectedEvent() {
   turn();
 }
 
+void decideOperationMode() {
+  //Wait for rpi to tell us to the operation mode
+  while (Serial.available() == 0) {}
+
+  char modeInput = Serial.read();
+  Serial.println(modeInput);
+  switch (modeInput) {
+    case 'a':
+      //Start running autonomous and then send startJourney command
+      mode = autonomous;
+      Serial.println(startJourney);
+      sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
+      break;
+    case 'b':
+      mode = bluetooth;
+      break;
+    default:
+      break;
+  }
+}
+
 void runAutonomous() {
   int distanceToObstacle = 25;
   commands cmdStopJourney = stopJourney;
@@ -303,7 +323,7 @@ void runAutonomous() {
       }
       break;
     case stopRunningState:
-      mode = stopAutonomous;
+      mode = detectMode;
       Serial.println(cmdStopJourney);
       Serial.println(mowerPosition.x);
       Serial.println(mowerPosition.y);
@@ -346,29 +366,9 @@ void runBluetooth() {
         break;
       case 'd':
         move(stopMoving, 0);
-        mode = stopBluetooth;
+        mode = detectMode;
         break;
     }
-  }
-}
-
-void decideOperationMode() {
-  //Wait for rpi to tell us to the operation mode
-  while (Serial.available() == 0) {}
-
-  char modeInput = Serial.read();
-  switch (modeInput) {
-    case 'a':
-      //Start running autonomous and then send startJourney command
-      mode = autonomous;
-      Serial.println(startJourney);
-      sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
-      break;
-    case 'b':
-      mode = bluetooth;
-      break;
-    default:
-      break;
   }
 }
 
@@ -403,18 +403,27 @@ void setup() {
       case bluetooth:
         runBluetooth();
         break;
-      case stopAutonomous:
-        //decideOperationMode();
-        break;
-      case stopBluetooth:
-        //decideOperationMode();
+      case detectMode:
+        if (Serial.available() > 0) {
+          char modeInput = Serial.read();
+          Serial.println(modeInput);
+          switch (modeInput) {
+            case 'a':
+              //Start running autonomous and then send startJourney command
+              mode = autonomous;
+              Serial.println(startJourney);
+              sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
+              break;
+            case 'b':
+              mode = bluetooth;
+              break;
+            default:
+              break;
+          }
+        }
         break;
       default:
         break;
-    }
-
-    if (mode == stopAutonomous || mode == stopBluetooth) {
-      break;
     }
 
     _loop();

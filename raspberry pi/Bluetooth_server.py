@@ -42,6 +42,7 @@ while True:
     try:
         # Read the data sent by the client
         cmd = client_sock.recv(1024)
+        print("Received: %s", cmd)
 
         if cmd == "MANUALMODE":
             serArduino.write('b')
@@ -49,8 +50,10 @@ while True:
             serArduino.write('d')
             break
         elif cmd == "AUTOMODE":
+            client_sock.send("AUTOMODE")
             serArduino.write('a')
         elif cmd == "STOPAUTOMODE":
+            client_sock.send("STOPAUTOMODE")
             serArduino.write('s')
             break
         elif cmd == "FORWARD":
