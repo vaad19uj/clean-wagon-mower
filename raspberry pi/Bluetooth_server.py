@@ -48,24 +48,22 @@ while True:
             serArduino.write('b')
         elif cmd == "MANUALDISCONNECT":
             serArduino.write('d')
-            break
         elif cmd == "AUTOMODE":
             client_sock.send("AUTOMODE")
             serArduino.write('a')
         elif cmd == "STOPAUTOMODE":
             client_sock.send("STOPAUTOMODE")
             serArduino.write('s')
-            break
         elif cmd == "FORWARD":
-            serArduino.write(1)
+            serArduino.write('1')
         elif cmd == "BACKWARD":
-            serArduino.write(2)
+            serArduino.write('2')
         elif cmd == "LEFT":
-            serArduino.write(3)
+            serArduino.write('3')
         elif cmd == "RIGHT":
-            serArduino.write(4)
+            serArduino.write('4')
         elif cmd == "STOPMOVING":
-            serArduino.write(5)
+            serArduino.write('5')
 
     except IOError:
         pass
@@ -80,8 +78,3 @@ while True:
         print("Server going down")
         break
 
-
-if client_sock is not None:
-    client_sock.close()
-
-server_sock.close()

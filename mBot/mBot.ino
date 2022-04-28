@@ -348,15 +348,15 @@ void runBluetooth() {
         move(backward, 20 / 100.0 * 255);
         break;
       case '3':
-        //Turn left at 20% speed for 1 second
-        move(left, 20 / 100.0 * 255);
+        //Turn left at 25% speed for 1 second
+        move(left, 25 / 100.0 * 255);
         _delay(1);
         move(left, 0);
         move(forward, 20 / 100.0 * 255);
         break;
       case '4':
-        //Turn left at 20% speed for 1 second
-        move(right, 20 / 100.0 * 255);
+        //Turn left at 25% speed for 1 second
+        move(right, 25 / 100.0 * 255);
         _delay(1);
         move(left, 0);
         move(forward, 20 / 100.0 * 255);

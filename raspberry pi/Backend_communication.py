@@ -10,6 +10,7 @@ ser = serial.Serial('/dev/ttyUSB0', 9600)
 ser.flush()
 ser.reset_input_buffer()
 camera = PiCamera()
+camera = None
 journeyId = -2
 mowerId = 2
 coordinateId = -2
@@ -78,18 +79,19 @@ def stopJourney(x, y):
 
 while True:
     cmd = ser.readline()
-    cmdAsInt = int(cmd)
-    if cmdAsInt == 0:
-        x = ser.readline()
-        y = ser.readline()
-        obstacleDetected(camera, x, y)
-    elif cmdAsInt == 1:
-        x = ser.readline()
-        y = ser.readline()
-        sendCoordinate(x, y)
-    elif cmdAsInt == 2:
-        startJourney()
-    elif cmdAsInt == 3:
-        x = ser.readline()
-        y = ser.readline()
-        stopJourney(x, y)
+    if type(cmd) != str:
+        cmdAsInt = int(cmd)
+        if cmdAsInt == 0:
+            x = ser.readline()
+            y = ser.readline()
+            obstacleDetected(camera, x, y)
+        elif cmdAsInt == 1:
+            x = ser.readline()
+            y = ser.readline()
+            sendCoordinate(x, y)
+        elif cmdAsInt == 2:
+            startJourney()
+        elif cmdAsInt == 3:
+            x = ser.readline()
+            y = ser.readline()
+            stopJourney(x, y)
