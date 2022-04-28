@@ -8,26 +8,44 @@ MeEncoderOnBoard Encoder_2(SLOT2);
 MeUltrasonicSensor ultrasonic_7(7);
 MeLineFollower linefollower_6(6);
 MeLightSensor lightsensor_12(12);
+MeGyro gyro_0(0, 0x69);
 
 enum directions {
   directionForward,
   directionBackward,
   directionLeft,
   directionRight,
-  directionStopMoving 
+  directionStopMoving,
+  noDirection
 };
 
 enum operationMode {
+  notDecided,
   autonomous,
   bluetooth,
-  remote
+  detectMode
 };
 
-enum commands{
-  takePicture
+enum lastTurn {
+  none,
+  leftTurn,
+  rightTurn
 };
 
-struct coordinate{
+enum autonomousModeStates {
+  notDecidedState,
+  runningState,
+  stopRunningState
+};
+
+enum commands {
+  obstacleDetected,
+  sendCoordinate,
+  startJourney,
+  stopJourney
+};
+
+struct coordinate {
   int x = 0;
   int y = 0;
 };
@@ -38,49 +56,96 @@ directions left = directionLeft;
 directions right = directionRight;
 directions forward = directionForward;
 directions stopMoving = directionStopMoving;
+directions lastDirection = noDirection;
+operationMode mode = notDecided;
+autonomousModeStates autoMode = notDecidedState;
+lastTurn lastTurn = none;
+unsigned long runningForwardTime;
+unsigned long backingTime;
+unsigned long turningTime;
+unsigned long stopTime;
+bool updateStartTime = true;
 
 void isr_process_encoder1(void)
 {
-  if(digitalRead(Encoder_1.getPortB()) == 0){
+  if (digitalRead(Encoder_1.getPortB()) == 0) {
     Encoder_1.pulsePosMinus();
-  }else{
+  } else {
     Encoder_1.pulsePosPlus();
   }
 }
 void isr_process_encoder2(void)
 {
-  if(digitalRead(Encoder_2.getPortB()) == 0){
+  if (digitalRead(Encoder_2.getPortB()) == 0) {
     Encoder_2.pulsePosMinus();
-  }else{
+  } else {
     Encoder_2.pulsePosPlus();
   }
 }
 
-void positionData(directions direction, int speed){
-  //TODO: Calculate position based on direction and speed? Using dead reckoning 
+void sendCoordinateToRpi(int x, int y) {
+  commands cmd = sendCoordinate;
+  Serial.println(cmd);
+  Serial.println(x);
+  Serial.println(y);
+}
 
-  switch(direction){
+void positionData(directions direction, int speed) {
+  int distance = 0;
+  unsigned long timePassed = 0;
+
+  double angle = fmod(gyro_0.getAngle(3), 360.0);
+  double angleInRad = radians(angle);
+
+  switch (direction) {
     case directionForward:
-    //  mowerPosition.y += ??
-    break;
+
+      if (turningTime != -2) {
+        //When running forward, we calculate how long the mower was turning left or right
+        timePassed = runningForwardTime - turningTime;
+        timePassed = timePassed / 1000;
+        distance = timePassed * speed;
+
+        mowerPosition.x += distance * cos(angleInRad);
+        mowerPosition.y += distance * sin(angleInRad);
+      }
+      break;
     case directionBackward:
-    //  mowerPosition.y -= ??
-    break;
+      //When backing, do nothing since the mower was been standing still before
+      break;
     case directionLeft:
-    //  mowerPosition.x -= ??
-    break;
+      //When turning, calculate how long the mower was backing
+      timePassed = turningTime - backingTime;
+      timePassed = timePassed / 1000;
+      distance = timePassed * speed;
+
+      mowerPosition.x += distance * cos(angleInRad);
+      mowerPosition.y += distance * sin(angleInRad);
+      break;
     case directionRight:
-    //  mowerPosition.x += ??
-    break;
+      //When turning, calculate how long the mower was backing
+      timePassed = turningTime - backingTime;
+      timePassed = timePassed / 1000;
+      distance = timePassed * speed;
+
+      mowerPosition.x += distance * cos(angleInRad);
+      mowerPosition.y += distance * sin(angleInRad);
+      break;
     case directionStopMoving:
-      // do nothing, position is not changing 
-    break;
+      // When stopping, we calculate how long the mower has been running forward
+      timePassed = stopTime - runningForwardTime;
+      timePassed = timePassed / 1000;
+      distance = timePassed * speed;
+
+      mowerPosition.x += distance * cos(angleInRad);
+      mowerPosition.y += distance * sin(angleInRad);
+      break;
     default:
-    // do nothing
-    break; 
+      // do nothing
+      break;
   }
 
-  //TODO: Send new position to backend 
+  sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
 }
 
 //Function to move robot
@@ -89,132 +154,222 @@ void move(directions direction, int speed)
   int leftSpeed = 0;
   int rightSpeed = 0;
 
-  //positionData(direction, speed);
-  // do we need to add duration here? So we know how long we are travelling in one direction?
+  //We only send position data to backend while being in autonomous mode
+  if (mode == autonomous && lastDirection != direction) {
+    positionData(direction, speed);
+  }
+
+  lastDirection = direction;
 
   //Set the direction of 2 motors' movement
-  switch(direction){
+  switch (direction) {
     case directionForward:
       leftSpeed = -speed;
       rightSpeed = speed;
-    break;
+      break;
     case directionBackward:
-     leftSpeed = speed;
-     rightSpeed = -speed;
-    break;
+      leftSpeed = speed;
+      rightSpeed = -speed;
+      break;
     case directionLeft:
       leftSpeed = -speed;
       rightSpeed = -speed;
-    break;
+      break;
     case directionRight:
       leftSpeed = speed;
       rightSpeed = speed;
-    break;
+      break;
     case directionStopMoving:
       // 0
       leftSpeed = speed;
       rightSpeed = speed;
-    break;
+      break;
     default:
-    // do nothing
-    break; 
+      // do nothing
+      break;
   }
-  
+
   Encoder_1.setTarPWM(leftSpeed);
   Encoder_2.setTarPWM(rightSpeed);
 }
 
 void _delay(float seconds) {
-  if(seconds < 0.0){
+  if (seconds < 0.0) {
     seconds = 0.0;
   }
   long endTime = millis() + seconds * 1000;
-  while(millis() < endTime) _loop();
+  while (millis() < endTime) _loop();
 }
 
-void turn(){
+void turn() {
   static int turnCounter = 0;
 
   // turn to the right 5 times in a row, then switch to turning left 5 times in a row
-  if (turnCounter < 5){
-    //Turn right at 15% speed for 1 second
-    move(right, 15 / 100.0 * 255);
+  if (turnCounter < 5) {
+    lastTurn = rightTurn;
+    //Turn right at 20% speed for 1 second
+    turningTime = millis();
+    move(right, 20 / 100.0 * 255);
     _delay(1);
     move(right, 0);
   }
   else {
-    //Turn left at 15% speed for 1 second
-    move(left, 15 / 100.0 * 255);
+    //Turn left at 20% speed for 1 second
+    lastTurn = leftTurn;
+    turningTime = millis();
+    move(left, 20 / 100.0 * 255);
     _delay(1);
     move(left, 0);
   }
 
-  turnCounter +=1;
+  turnCounter += 1;
 
-  if (turnCounter == 10){
+  if (turnCounter == 10) {
     turnCounter = 0;
   }
 }
 
-void lineDetected(){
-  //Move backward at 25% speed for 1 second
-  move(backward, 25 / 100.0 * 255);
+void lineDetectedEvent() {
+  //Stop moving
+  stopTime = millis();
+  move(stopMoving, 0);
+  _delay(0.5);
+
+  //Move backward at 20% speed for 1 second
+  backingTime = millis();
+  move(backward, 20 / 100.0 * 255);
   _delay(1);
   move(backward, 0);
 
   turn();
 }
 
-void obstacleDetected(){
+void obstacleDetectedEvent() {
 
-  commands cmd = takePicture;
-  
+  commands cmd = obstacleDetected;
+
   //Stop moving
+  stopTime = millis();
   move(stopMoving, 0);
 
-  //Flag that Rpi should take picture
+  //Flag to Rpi that obstacle avoidance event occured
   Serial.println(cmd);
-  
+  Serial.println(mowerPosition.x);
+  Serial.println(mowerPosition.y);
+
   _delay(0.5);
   _delay(2);
 
-  //Move backward at 25% speed for 1 second
-  move(backward, 25 / 100.0 * 255);
+  //Move backward at 20% speed for 1 second
+  backingTime = millis();
+  move(backward, 20 / 100.0 * 255);
   _delay(1);
   move(backward, 0);
 
   turn();
 }
 
-void runAutonomous(){
-  int distanceToObstacle = 25;
-  
-  //Move forward at 25% speed
-  move(forward, 25 / 100.0 * 255);
-  if(ultrasonic_7.distanceCm() < distanceToObstacle){
-      obstacleDetected();
-  }else{
-      //If line follower sensor detects left black
-      if((0?(2==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 2)==2):(2==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 2)==0))){
-        lineDetected();
-      }
-      //If line follower sensor detects right black
-      if((0?(1==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 1)==1):(1==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 1)==0))){
-        lineDetected();
-      }
-      //If line follower sensor detects BOTH black (necessary?)
-      if((0?(3==0?linefollower_6.readSensors()==0:(linefollower_6.readSensors() & 3)==3):(3==0?linefollower_6.readSensors()==3:(linefollower_6.readSensors() & 3)==0))){
-        lineDetected();
-      }
+void decideOperationMode() {
+  //Wait for rpi to tell us to the operation mode
+  while (Serial.available() == 0) {}
+
+  char modeInput = Serial.read();
+  Serial.println(modeInput);
+  switch (modeInput) {
+    case 'a':
+      //Start running autonomous and then send startJourney command
+      mode = autonomous;
+      Serial.println(startJourney);
+      sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
+      break;
+    case 'b':
+      mode = bluetooth;
+      break;
+    default:
+      break;
   }
 }
 
-void runBluetooth(){
-  //TODO: Run mower by Bluetooth commands sent from app?
+void runAutonomous() {
+  int distanceToObstacle = 25;
+  commands cmdStopJourney = stopJourney;
+  autoMode = runningState;
+
+  if (Serial.available() > 0)
+  {
+    char cmd = Serial.read();
+    if (cmd == 's') {
+      autoMode = stopRunningState;
+    }
+  }
+
+  switch (autoMode) {
+    case runningState:
+      if (updateStartTime) {
+        runningForwardTime = millis();
+        updateStartTime = false;
+      }
+
+      //Move forward at 20% speed
+      move(forward, 20 / 100.0 * 255);
+
+      if (ultrasonic_7.distanceCm() < distanceToObstacle) {
+        updateStartTime = true;
+        obstacleDetectedEvent();
+      } else if (linefollower_6.readSensors() != 3) {
+        //If line follower sensor detects black
+        updateStartTime = true;
+        lineDetectedEvent();
+      }
+      break;
+    case stopRunningState:
+      mode = detectMode;
+      Serial.println(cmdStopJourney);
+      Serial.println(mowerPosition.x);
+      Serial.println(mowerPosition.y);
+      stopTime = millis();
+      move(stopMoving, 0);
+      break;
+    default:
+      break;
+  }
 }
 
-void runRemote(){
-  //TODO: Run mower by command from app, sent from backend?
+void runBluetooth() {
+  if (Serial.available() > 0)
+  {
+    char cmd = Serial.read();
+
+    switch (cmd) {
+      case '1':
+        move(forward, 20 / 100.0 * 255);
+        break;
+      case '2':
+        move(backward, 20 / 100.0 * 255);
+        break;
+      case '3':
+        //Turn left at 25% speed for 1 second
+        move(left, 25 / 100.0 * 255);
+        _delay(1);
+        move(left, 0);
+        move(forward, 20 / 100.0 * 255);
+        break;
+      case '4':
+        //Turn left at 25% speed for 1 second
+        move(right, 25 / 100.0 * 255);
+        _delay(1);
+        move(left, 0);
+        move(forward, 20 / 100.0 * 255);
+        break;
+      case '5':
+        move(stopMoving, 0);
+        break;
+      case 'd':
+        move(stopMoving, 0);
+        mode = detectMode;
+        break;
+    }
+  }
 }
 
 void setup() {
@@ -227,29 +382,56 @@ void setup() {
   randomSeed((unsigned long)(lightsensor_12.read() * 123456));
 
   Serial.begin(9600);
+  gyro_0.begin();
 
-  //TODO: Decide mode by input from app?
-  operationMode mode = autonomous;
-  while(1) {
+  commands cmdStartJourney = startJourney;
 
-    switch(mode){
+  mowerPosition.x = 0;
+  mowerPosition.y = 0;
+
+  decideOperationMode();
+
+  //Used to calculate coordinates, set to "bad value" when no turns has been made yet
+  turningTime = -2;
+
+  while (1) {
+
+    switch (mode) {
       case autonomous:
         runAutonomous();
-      break;
+        break;
       case bluetooth:
         runBluetooth();
-      break;
-      case remote:
-        runRemote();
-      break;
+        break;
+      case detectMode:
+        if (Serial.available() > 0) {
+          char modeInput = Serial.read();
+          Serial.println(modeInput);
+          switch (modeInput) {
+            case 'a':
+              //Start running autonomous and then send startJourney command
+              mode = autonomous;
+              Serial.println(startJourney);
+              sendCoordinateToRpi(mowerPosition.x, mowerPosition.y);
+              break;
+            case 'b':
+              mode = bluetooth;
+              break;
+            default:
+              break;
+          }
+        }
+        break;
       default:
-      break;
+        break;
     }
-      _loop();
+
+    _loop();
   }
 }
 
 void _loop() {
+  gyro_0.update();
   Encoder_1.loop();
   Encoder_2.loop();
 }
