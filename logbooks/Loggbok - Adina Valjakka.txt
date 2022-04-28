@@ -10,7 +10,7 @@ Vecka 2
 - Förberedde ett dokument med frågor och funderingar till torsdagens möte med handledarna på Husqvarna.
 - Gjorde ett försök att snygga till den automatgenererade koden från mBlock, genom att dela upp koden mer i olika funktioner, och lägga till enums och structs för att öka läsbarheten. La till lite TODO kommentarer över vad jag tror kommer behöva fixas. 
 - Började jobba med seriella kommunikationen mellan rpi och Arduino. Testade koden för ett "Hello world" exempel vi hittade online och lyckades få komponenterna att "prata" med varandra. 
-- Kopplade upp kameran. Började jobba med koden för att kunna ta kort med rpi'n när Arduino skickat en "flagga" för ett obstacle detected event. 
+- Kopplade upp kameran. Började jobba med koden för att kunna ta kort med rpin när Arduino skickat en "flagga" för ett obstacle detected event. 
 - Skrev koden för att kunna skicka bilder till Backend API.
 - Deltog i handledarmötet med Husqvarna. 
 - Hade ett gruppmöte med hela teamet där vi diskuterade vad som togs upp på mötet med Husqvarna. 
@@ -28,6 +28,16 @@ Vecka 4
 - Deltog i sprintplaneringsmötet med gruppen, där vi diskuterade veckans tasks och estimerade poäng för varje task.
 - Satte upp konfigureringen för SPP Bluetooth på rpin. 
 - Testade Bluetooth SPP koden på rpin tillsammans med en terminalapp. Vi fick inte det att fungera, så vi testade socket-lösningen istället. 
+- Deltog i handledarmötet med Husqvarna.
+- Hade ett möte med teamet för att diskutera några arkitekturfrågor. 
 - Bluetooth slutade fungera helt på rpin, så vi spenderade en eftermiddag med att felsöka det. Visade sig ha blivit ett fel i en config-fil. 
 - Skrev koden för att kunna starta och stoppa en "journey" och kunna skicka koordinater, från mowern till backend. Testade även koden manuellt tillsammans med backend för att se om det fungerade som det skulle. 
-- Började jobba med positioneringsalgoritmen, för att mowern ska kunna räkna ut sin egna position. 
+- Skrev koden till positioneringsalgoritmen, för att mowern ska kunna räkna ut sin egna position. 
+
+Vecka 5
+- Deltog i sprintplaneringsmötet med gruppen, där vi diskuterade veckans tasks och estimerade poäng för varje task.
+- Satte upp Bluetooth-servern på raspberry pin och skrev koden för att skicka vidare inkomna BT-meddelanden/kommandon till Arduinon. 
+- Skrev Arduinokoden för att kunna ta emot meddelanden/kommandon seriellt från raspberry pin. 
+- Deltog i handledarmötet med Husqvarna. 
+- Deltog i ett gruppmöte för att diskutera hur långt alla grupper kommit och om vi behöver hjälp från någon annan. 
+- Testade Bluetoothservern tillsammans med mobilappen och fixade lite buggar. 
