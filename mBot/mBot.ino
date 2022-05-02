@@ -90,8 +90,9 @@ void sendCoordinateToRpi(int x, int y) {
   Serial.println(y);
 }
 
-void positionData(directions direction, int speed) {
+void positionData(directions direction) {
   int distance = 0;
+  int speed = 0;
   unsigned long timePassed = 0;
 
   double angle = fmod(gyro_0.getAngle(3), 360.0);
@@ -102,6 +103,7 @@ void positionData(directions direction, int speed) {
 
       if (turningTime != -2) {
         //When running forward, we calculate how long the mower was turning left or right
+        speed = 20;
         timePassed = runningForwardTime - turningTime;
         timePassed = timePassed / 1000;
         distance = timePassed * speed;
@@ -115,6 +117,7 @@ void positionData(directions direction, int speed) {
       break;
     case directionLeft:
       //When turning, calculate how long the mower was backing
+      speed = 15;
       timePassed = turningTime - backingTime;
       timePassed = timePassed / 1000;
       distance = timePassed * speed;
@@ -124,6 +127,7 @@ void positionData(directions direction, int speed) {
       break;
     case directionRight:
       //When turning, calculate how long the mower was backing
+      speed = 15;
       timePassed = turningTime - backingTime;
       timePassed = timePassed / 1000;
       distance = timePassed * speed;
@@ -133,6 +137,7 @@ void positionData(directions direction, int speed) {
       break;
     case directionStopMoving:
       // When stopping, we calculate how long the mower has been running forward
+      speed = 20;
       timePassed = stopTime - runningForwardTime;
       timePassed = timePassed / 1000;
       distance = timePassed * speed;
@@ -156,7 +161,7 @@ void move(directions direction, int speed)
 
   //We only send position data to backend while being in autonomous mode
   if (mode == autonomous && lastDirection != direction) {
-    positionData(direction, speed);
+    positionData(direction);
   }
 
   lastDirection = direction;
@@ -235,9 +240,9 @@ void lineDetectedEvent() {
   move(stopMoving, 0);
   _delay(0.5);
 
-  //Move backward at 20% speed for 1 second
+  //Move backward at 15% speed for 1 second
   backingTime = millis();
-  move(backward, 20 / 100.0 * 255);
+  move(backward, 15 / 100.0 * 255);
   _delay(1);
   move(backward, 0);
 
@@ -260,9 +265,9 @@ void obstacleDetectedEvent() {
   _delay(0.5);
   _delay(2);
 
-  //Move backward at 20% speed for 1 second
+  //Move backward at 15% speed for 1 second
   backingTime = millis();
-  move(backward, 20 / 100.0 * 255);
+  move(backward, 15 / 100.0 * 255);
   _delay(1);
   move(backward, 0);
 

@@ -75,7 +75,7 @@ def stopJourney(x, y):
       'Content-Type': 'application/json'
     }
 
-    response = requests.request("POST", url, headers=headers, data=payload)
+    response = requests.request("PUT", url, headers=headers, data=payload)
 
 while True:
     cmd = ser.readline()
