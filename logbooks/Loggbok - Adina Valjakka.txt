@@ -48,7 +48,10 @@ Vecka 6
 - Började sammanställa de manuella testerna i Test report-dokumentet. 
 - Började arbeta med demo-presentationen. 
 - Förberedde en Miro-board och deltog i ett projekt "retrospective"/lessons learned möte med resten av gruppen. 
+- Deltog i handledarmötet med Husqvarna. 
+- Fixade configen för en statisk IP adress till rpin, för att enklare kunna koppla upp sig från laptopen via SSH. 
+- Sammanfattade gruppens tankar från "lessons learned" mötet i lessons learned dokumentet. 
 
 Vecka 7
 - Tester och bugfix tillsammans med hela gruppen, testade flödet i hela systemet från mobil-mower-backend. 
-- Övade inför Demo-presentationen. 
+- Arbetade med och övade inför Demo-presentationen. 
