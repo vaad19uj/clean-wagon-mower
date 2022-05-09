@@ -2,7 +2,7 @@ import sys
 import os
 import time
 from bluetooth import *
-import serial
+import serial  
 
 # Make device visible
 os.system("hciconfig hci0 piscan")
@@ -65,11 +65,8 @@ while True:
         elif cmd == "STOPMOVING":
             serArduino.write('5')
 
-    except IOError:
-        pass
-
-    except KeyboardInterrupt:
-
+    except socket.error:
+        print("Socket error, client disconnected")
         if client_sock is not None:
             client_sock.close()
 
@@ -78,3 +75,15 @@ while True:
         print("Server going down")
         break
 
+    except KeyboardInterrupt:
+        if client_sock is not None:
+            client_sock.close()
+
+        server_sock.close()
+
+        print("Server going down")
+        break
+
+
+
+    
