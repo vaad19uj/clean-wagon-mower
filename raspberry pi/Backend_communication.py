@@ -77,9 +77,10 @@ def stopJourney(x, y):
 
     response = requests.request("PUT", url, headers=headers, data=payload)
 
+
 while True:
     cmd = ser.readline()
-    if type(cmd) != str:
+    try:
         cmdAsInt = int(cmd)
         if cmdAsInt == 0:
             x = ser.readline()
@@ -95,3 +96,7 @@ while True:
             x = ser.readline()
             y = ser.readline()
             stopJourney(x, y)
+    except KeyboardInterrupt:
+        break
+    except:
+        pass
