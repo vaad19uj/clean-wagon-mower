@@ -1,11 +1,11 @@
-Vecka 1
+Vecka 1 (20h)
 - Hade första mötet med gruppen, där vi delade ut roller i projektet och diskuterade vidare kring projektet. Vi delade upp gruppen i 3 subgrupper, backend, app och mower/robot. 
 - Satte upp Repositories till alla subgrupper på Github och fixade Trello-boards till Sprintplaneringen.
 - Valde en modell för mBoten och monterade ihop den.
 - Vi testade koden för att få igång obstacle detection med ultrasonic sensorn och fick roboten att köra och hålla sig inom ett confined area. 
 - Gick och köpte en micro-usb kabel för att kunna koppla raspberry pin till Arduinon för seriell kommunikation. 
 
-Vecka 2
+Vecka 2 (20h)
 - Deltog i sprintplaneringsmötet med gruppen, där vi diskuterade veckans tasks och estimerade poäng för varje task. 
 - Förberedde ett dokument med frågor och funderingar till torsdagens möte med handledarna på Husqvarna.
 - Gjorde ett försök att snygga till den automatgenererade koden från mBlock, genom att dela upp koden mer i olika funktioner, och lägga till enums och structs för att öka läsbarheten. La till lite TODO kommentarer över vad jag tror kommer behöva fixas. 
@@ -17,14 +17,14 @@ Vecka 2
 - Fixade koden för att mowern ska svänga åt olika håll när den hittar en linje eller får ett obstacle detected event. 
 - Diskuterade vidare kring low level requirements med mowergruppen. 
 
-Vecka 3
+Vecka 3 (15h)
 - Deltog i sprintplaneringsmötet med gruppen, där vi diskuterade veckans tasks och estimerade poäng för varje task.
 - Började leta efter dokumentation över hur Bluetooth-modulen som vi fick med Arduinon fungerar. Upptäckte att modulen var kopplad till samma TX/RX som USB-porten, så vi bestämde att vi skulle köra Bluetooth på Rpin istället.  
 - Började läsa på om hur det fungerar med Bluetooth på rpin. 
 - Deltog i handledarmötet med Husqvarna.
 - Skrev koden för Serial Port profile (SPP) Bluetooth och sockets till raspberry pin. 
 
-Vecka 4
+Vecka 4 (20h)
 - Deltog i sprintplaneringsmötet med gruppen, där vi diskuterade veckans tasks och estimerade poäng för varje task.
 - Satte upp konfigureringen för SPP Bluetooth på rpin. 
 - Testade Bluetooth SPP koden på rpin tillsammans med en terminalapp. Vi fick inte det att fungera, så vi testade socket-lösningen istället. 
@@ -34,7 +34,7 @@ Vecka 4
 - Skrev koden för att kunna starta och stoppa en "journey" och kunna skicka koordinater, från mowern till backend. Testade även koden manuellt tillsammans med backend för att se om det fungerade som det skulle. 
 - Skrev koden till positioneringsalgoritmen, för att mowern ska kunna räkna ut sin egna position. 
 
-Vecka 5
+Vecka 5 (20h)
 - Deltog i sprintplaneringsmötet med gruppen, där vi diskuterade veckans tasks och estimerade poäng för varje task.
 - Satte upp Bluetooth-servern på raspberry pin och skrev koden för att skicka vidare inkomna BT-meddelanden/kommandon till Arduinon. 
 - Skrev Arduinokoden för att kunna ta emot meddelanden/kommandon seriellt från raspberry pin. 
@@ -42,7 +42,11 @@ Vecka 5
 - Deltog i ett gruppmöte för att diskutera hur långt alla grupper kommit och om vi behöver hjälp från någon annan. 
 - Testade Bluetoothservern tillsammans med mobilappen och fixade lite buggar. 
 
+<<<<<<< Updated upstream
 Vecka 6
+=======
+Vecka 6 (20h)
+>>>>>>> Stashed changes
 - Deltog i sprintplaneringsmötet med gruppen, där vi diskuterade veckans tasks och estimerade poäng för varje task.
 - Skrev dokumentationen för mower-delen i Software design description-dokumentet. 
 - Började sammanställa de manuella testerna i Test report-dokumentet. 
@@ -52,6 +56,20 @@ Vecka 6
 - Fixade configen för en statisk IP adress till rpin, för att enklare kunna koppla upp sig från laptopen via SSH. 
 - Sammanfattade gruppens tankar från "lessons learned" mötet i lessons learned dokumentet. 
 
+<<<<<<< Updated upstream
 Vecka 7
 - Tester och bugfix tillsammans med hela gruppen, testade flödet i hela systemet från mobil-mower-backend. 
 - Arbetade med och övade inför Demo-presentationen. 
+=======
+Vecka 7 (15h)
+- Tester och bugfix tillsammans med hela gruppen, testade flödet i hela systemet från mobil-mower-backend. 
+- Deltog i handledarmötet med Husqvarna. 
+- Arbetade med och övade inför Demo-presentationen. 
+
+Vecka 8 (15h)
+- Bugfix och tester tillsammans med appen. 
+- Deltog i handledarmötet med Husqvarna. 
+- Gick och köpte svart eltejp för att kunna fixa ett "confined area" till demot. 
+- Deltog i ett gruppmöte för att förbereda inför demot. 
+- Sammanställde och skickade dokumentationen till Husqvarna och Andreas. 
+>>>>>>> Stashed changes
