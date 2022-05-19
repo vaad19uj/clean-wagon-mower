@@ -42,11 +42,7 @@ Vecka 5 (20h)
 - Deltog i ett gruppmöte för att diskutera hur långt alla grupper kommit och om vi behöver hjälp från någon annan. 
 - Testade Bluetoothservern tillsammans med mobilappen och fixade lite buggar. 
 
-<<<<<<< Updated upstream
-Vecka 6
-=======
 Vecka 6 (20h)
->>>>>>> Stashed changes
 - Deltog i sprintplaneringsmötet med gruppen, där vi diskuterade veckans tasks och estimerade poäng för varje task.
 - Skrev dokumentationen för mower-delen i Software design description-dokumentet. 
 - Började sammanställa de manuella testerna i Test report-dokumentet. 
@@ -56,11 +52,6 @@ Vecka 6 (20h)
 - Fixade configen för en statisk IP adress till rpin, för att enklare kunna koppla upp sig från laptopen via SSH. 
 - Sammanfattade gruppens tankar från "lessons learned" mötet i lessons learned dokumentet. 
 
-<<<<<<< Updated upstream
-Vecka 7
-- Tester och bugfix tillsammans med hela gruppen, testade flödet i hela systemet från mobil-mower-backend. 
-- Arbetade med och övade inför Demo-presentationen. 
-=======
 Vecka 7 (15h)
 - Tester och bugfix tillsammans med hela gruppen, testade flödet i hela systemet från mobil-mower-backend. 
 - Deltog i handledarmötet med Husqvarna. 
@@ -72,4 +63,3 @@ Vecka 8 (15h)
 - Gick och köpte svart eltejp för att kunna fixa ett "confined area" till demot. 
 - Deltog i ett gruppmöte för att förbereda inför demot. 
 - Sammanställde och skickade dokumentationen till Husqvarna och Andreas. 
->>>>>>> Stashed changes
